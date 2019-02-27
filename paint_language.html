@@ -1,0 +1,77 @@
+<style>
+canvas {border: solid;}
+</style>
+<canvas id="canvas" width=750 height=750></canvas>
+
+<script>
+  const example=`
+  init 64 64
+  dot 20 20
+  dot 21 20
+  color #663399
+  dot 20 40 2 2
+  `
+
+  const scale = 10
+  const offscreen = document.createElement('canvas')
+  const pen = offscreen.getContext('2d')
+  const ctx = canvas.getContext('2d')
+
+  const sprite = {
+    w: 64,
+    h: 64,
+    layers: [],
+    selection: null,
+    color: '#000000ff'
+  }
+
+  const commands = { init, dot, color, select }
+
+  function init(fields) {
+    const [w, h] = fields
+    sprite.w = w
+    sprite.h = h
+    sprite.layers.length = 0
+    sprite.layers.push(pen.createImageData(w, h))
+    sprite.selection = null
+
+    canvas.width = w * scale
+    canvas.height = h * scale
+    ctx.imageSmoothingEnabled = false
+    ctx.scale(scale, scale)
+
+    offscreen.width = w
+    offscreen.height = h
+    pen.color = '#000000ff'
+  }
+
+  function dot(fields) {
+    const [x, y, w, h] = fields
+    pen.fillRect(x, y, w || 1, h || 1)
+  }
+
+  function color(fields) {
+    pen.fillStyle = fields[0]
+  }
+
+  function select(fields) {
+  }
+
+  function drawFromLog(line) {
+    const fields = line.split(/\s+/)
+    const command = commands[fields.shift()]
+    if (command) command(fields)
+  }
+
+  function drawExample() {
+    const log = example.match(/\S.+/g).map(line => line.trim())
+    log.forEach(drawFromLog)
+    const {w, h} = sprite
+    const i = new Image()
+    ctx.clearRect(0, 0, w, h)
+    i.onload = _ => ctx.drawImage(i, 0, 0)
+    i.src = offscreen.toDataURL()
+  }
+
+  drawExample()
+</script>

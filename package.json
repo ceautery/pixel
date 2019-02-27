@@ -1,0 +1,22 @@
+{
+  "name": "pixel",
+  "version": "1.0.0",
+  "description": "Pixel editor demo for GEMS game design club",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ceautery/pixel.git"
+  },
+  "author": "Curtis Autery",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ceautery/pixel/issues"
+  },
+  "homepage": "https://github.com/ceautery/pixel#readme",
+  "dependencies": {
+    "google-auth-library": "^2.0.2"
+  }
+}
