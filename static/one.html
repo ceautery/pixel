@@ -1,0 +1,99 @@
+<style>
+canvas {
+  image-rendering: pixelated;
+  border-right: 1px solid grey;
+  border-bottom: 1px solid grey;
+  background-size: 20px 20px;
+  background-image: linear-gradient(to right, grey 1px, transparent 1px),
+                    linear-gradient(to bottom, grey 1px, transparent 1px);
+}
+
+main, nav {
+  display: flex;
+  justify-content: center;
+}
+
+div {
+  width: 80px;
+  height: 40px;
+  margin: 10px;
+  border: 1px solid grey;
+}
+
+</style>
+
+<main>
+  <section>
+    <canvas id="canvas"></canvas>
+    <nav>
+      <div black></div>
+      <div red></div>
+      <div purple></div>
+      <div white></div>
+    </nav>
+  </section>
+</main>
+
+<script>
+  const size = 32
+  const scale = 20
+
+  canvas.width = size
+  canvas.height = size
+  canvas.style.width = canvas.style.height = size * scale
+
+  canvas.addEventListener('mousemove', drawWithCursor)
+  canvas.addEventListener('mousedown', drawWithCursor)
+  canvas.addEventListener('mouseleave', flatten)
+  canvas.addEventListener('mouseup', flatten)
+
+  const pen = canvas.getContext('2d')
+  let image = new Image()
+
+  document.querySelectorAll('div').forEach(d => {
+    const color = d.getAttributeNames()[0]
+    d.style.backgroundColor = color
+    d.onclick = _ => setColor(color)
+  })
+
+  function setColor(color) {
+    flatten()
+    pen.fillStyle = color
+  }
+
+  function flatten() {
+    draw()
+    whiteToTransparent()
+    image = new Image()
+    image.src = canvas.toDataURL()
+    pen.beginPath()
+  }
+
+  function whiteToTransparent() {
+    const imageData = pen.getImageData(0, 0, size, size)
+    const pixels = new Uint32Array(imageData.data.buffer)
+    pixels.forEach((p, i) => {
+      if (p == 4294967295) pixels[i] = 0
+    })
+    pen.putImageData(imageData, 0, 0)
+  }
+
+  function draw() {
+    pen.clearRect(0, 0, size, size)
+    pen.drawImage(image, 0, 0)
+    pen.fill()
+  }
+
+  function drawWithCursor(mouseEvent) {
+    const x = parseInt(mouseEvent.offsetX / scale)
+    const y = parseInt(mouseEvent.offsetY / scale)
+
+    if (mouseEvent.buttons) {
+      pen.rect(x, y, 1, 1)
+      draw()
+    } else {
+      draw()
+      pen.fillRect(x, y, 1, 1)
+    }
+  }
+</script>

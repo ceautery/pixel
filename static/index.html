@@ -1,0 +1,253 @@
+<style>
+canvas {
+  border: solid;
+  image-rendering: pixelated;
+}
+
+#error { color: red; }
+
+select {
+  font-size: 1em;
+  width: 15em;
+}
+
+option { margin: 2px; }
+
+select:focus {
+  outline: none;
+}
+
+main {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  margin: auto;
+  align-items: center;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  border-radius: 2em;
+}
+
+section {
+  width: 45%;
+  height: 100%;
+  background: white;
+  border-radius: 1em;
+}
+
+#picker {
+  display: flex;
+}
+
+button, input {
+  margin: 10px;
+  width: 100px;
+  height: 40px;
+  font-size: 1em;
+  background: transparent;
+  display: inline;
+  vertical-align: middle;
+}
+
+nav {
+  padding: 5px;
+}
+
+nav button { display: block; }
+
+</style>
+<div id="error"></div>
+<main>
+  <section id="left">
+    <div id="frameCounter"></div>
+    <canvas id="canvas"></canvas>
+    <input type="color" onchange="setColor(this.value)">
+    <button onclick="previousFrame()">&lt;</button>
+    <button onclick="nextFrame()">&gt;</button>
+    <button onclick="newFrame()">New frame</button>
+  </section>
+
+  <section id="picker">
+    <select id="sprites" size="2" onchange="load()"></select>
+    <nav>
+      <button onclick="newSprite()">New sprite</button>
+      <button onclick="save()">Save</button>
+    </nav>
+  </section>
+</main>
+
+<script>
+  const scale = 20
+  const size = 32
+  canvas.width = size
+  canvas.height = size
+  canvas.style.width = size * scale + 'px'
+  canvas.style.height = size * scale + 'px'
+  const pen = canvas.getContext('2d')
+
+  let frames = []
+  let frameIndex = 0
+  let stopDrawing = true
+  let name = ''
+
+  canvas.addEventListener('mousemove', addPoint)
+  canvas.addEventListener('mousedown', addPoint)
+  canvas.addEventListener('mouseleave', draw)
+
+  const select = document.querySelector('select')
+
+  fetch('/list').then(resp => resp.json().then(populate))
+
+  function newSprite() {
+    let name = prompt('Sprite name')
+    if (name == null) return
+
+    frameIndex = 0
+    currentFrame = new Image()
+    frames = [currentFrame]
+    addOption(name)
+    select.selectedIndex = select.length - 1
+    stopDrawing = false
+  }
+
+  async function newFrame() {
+    await setFrame()
+    frameIndex = frames.length
+    currentFrame = new Image()
+    frames.push(currentFrame)
+    currentFrame.src = canvas.toDataURL()
+    pen.beginPath()
+    draw()
+  }
+
+  async function nextFrame() {
+    if (frameIndex + 1 >= frames.length) return
+
+    await setFrame()
+    currentFrame = frames[++frameIndex]
+    pen.beginPath()
+    draw()
+  }
+
+  async function previousFrame() {
+    if (frameIndex <= 0) return
+
+    await setFrame()
+    currentFrame = frames[--frameIndex]
+    pen.beginPath()
+    draw()
+  }
+
+  function populate(list) {
+    list.forEach(addOption)
+  }
+
+  function addOption(name) {
+    const option = document.createElement('option')
+    option.value = name
+    option.append(name)
+    select.append(option)
+  }
+
+  function draw() {
+    if (stopDrawing) return
+
+    frameCounter.innerText = `Frame ${frameIndex + 1} of ${frames.length}`
+    pen.clearRect(0, 0, canvas.width, canvas.height)
+    pen.drawImage(currentFrame, 0, 0)
+    pen.fill()
+  }
+
+  function addPoint(e) {
+    if (stopDrawing) return
+
+    const x = toScale(e.offsetX)
+    const y = toScale(e.offsetY)
+    if (e.buttons) {
+      pen.rect(x, y, 1, 1)
+      draw()
+    } else {
+      draw()
+      pen.fillRect(x, y, 1, 1)
+    }
+  }
+
+  function toScale(num) {
+    return Math.floor(num / scale)
+  }
+
+  const headers = { 'Content-Type': 'application/json; charset=utf-8' }
+  const method = 'POST'
+
+  function setColor(color) {
+    setFrame()
+    pen.beginPath()
+    pen.fillStyle = color
+  }
+
+  function setFrame() {
+    currentFrame = new Image()
+    const promise = new Promise(resolve => {
+      currentFrame.onload = _ => resolve()
+    })
+    currentFrame.src = canvas.toDataURL()
+    frames[frameIndex] = currentFrame
+    return promise
+  }
+
+  async function save() {
+    await setFrame()
+
+    const offscreen = document.createElement('canvas')
+    offscreen.width = frames.length * size
+    offscreen.height = size
+    const ctx = offscreen.getContext('2d')
+
+    frames.forEach( (image, index) => {
+      ctx.drawImage(image, size * index, 0)
+    })
+
+    const image = offscreen.toDataURL()
+    const name = select[select.selectedIndex].value
+    const body = JSON.stringify({ image, name })
+
+    fetch('/save', { method, headers, body }).then(resp => resp.json().then(setError))
+  }
+
+  function setError(body) {
+    error.innerText = body.success ? '' : body.error
+  }
+
+  function load() {
+    stopDrawing = true
+    const name = select[select.selectedIndex].value
+    const image = new Image()
+    image.onload = _ => setImage(image)
+    image.src = name
+  }
+
+  function setImage(image) {
+    const offscreen = document.createElement('canvas')
+    offscreen.width = size
+    offscreen.height = size
+    ctx = offscreen.getContext('2d')
+
+    frames = []
+    frameIndex = 0
+    let frameCount = image.width / size
+    for (let i = 0; i < frameCount; i++) {
+      ctx.clearRect(0, 0, size, size)
+      ctx.drawImage(image, i * size, 0, size, size, 0, 0, size, size)
+      const frame = new Image()
+      if (i == 0) {
+        currentFrame = frame
+        frame.onload = _ => {
+          stopDrawing = false
+          draw()
+        }
+      }
+      frame.src = offscreen.toDataURL()
+      frames.push(frame)
+    }
+  }
+</script>

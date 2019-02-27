@@ -17,6 +17,8 @@
   },
   "homepage": "https://github.com/ceautery/pixel#readme",
   "dependencies": {
+    "body-parser": "^1.18.3",
+    "express": "^4.16.4",
     "google-auth-library": "^2.0.2"
   }
 }
