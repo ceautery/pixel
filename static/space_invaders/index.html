@@ -9,28 +9,8 @@ canvas {
 
 <canvas id="canvas"></canvas>
 
-<script>
-  const pen = canvas.getContext('2d')
-  const [W, H] = [224, 256] // Game resolution
-
-  function resize() {
-    canvas.width = Math.min(innerWidth, (innerHeight * W / H) | 0) - 50
-    canvas.height = (w * H / W) | 0
-    scale()
-    draw()
-  }
-
-  onresize = resize
-  resize()
-
-  function scale() {
-    pen.resetTransform()
-
-  }
-
-  function draw() {
-  }
-
-  function init() {
-  }
+<script type="module">
+  import Game from './game.js'
+  const game = new Game(canvas)
+  game.init()
 </script>

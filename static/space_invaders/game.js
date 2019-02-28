@@ -1,26 +1,18 @@
-const canvas = document.createElement('canvas')
-const pen = canvas.getContext('2d')
-let initialized = false
+import Player from './player.js'
+
+const [W, H] = [224, 256] // Game resolution
 
 function fitToScreen() {
-  canvas.width = innerWidth
-  canvas.height = innerHeight
+  canvas.width = Math.min(innerWidth, (innerHeight * W / H) | 0) - 50
+  canvas.height = (canvas.width * H / W) | 0
 }
 
-class Player {
-  constructor() {
-    this.x = 100
-    this.y = 100
-  }
+class Game {
+  constructor(canvas) {
+    this.canvas = canvas
+    this.pen = canvas.getContext('2d')
+    this.initialized = false
 
-  draw() {
-    pen.moveTo(this.x + 50, this.y)
-    pen.arc(this.x, this.y, 50, 0, Math.PI * 2)
-  }
-}
-
-class Playfield {
-  constructor() {
     this.objects = [new Player()]
 
     // bindings for setInterval/requesteAnimationFrame calls
@@ -29,9 +21,9 @@ class Playfield {
   }
 
   init() {
-    if (initialized) return
+    if (this.initialized) return
+    this.initialized = true
 
-    document.body.append(canvas)
     addEventListener('resize', fitToScreen)
     fitToScreen()
     this.draw()
@@ -41,12 +33,13 @@ class Playfield {
   step() { this.objects.forEach(o => o.x++) }
 
   draw() {
+    const {pen, canvas} = this
     requestAnimationFrame(this.draw)
     pen.clearRect(0, 0, canvas.width, canvas.height)
     pen.beginPath()
-    this.objects.forEach(o => o.draw())
+    this.objects.forEach(o => o.draw(pen))
     pen.stroke()
   }
 }
 
-export default Playfield
+export default Game
