@@ -1,12 +1,12 @@
 class Player {
   constructor() {
-    this.x = 100
-    this.y = 100
+    this.x = 11
+    this.y = 245
   }
 
   draw(pen) {
-    pen.moveTo(this.x + 50, this.y)
-    pen.arc(this.x, this.y, 50, 0, Math.PI * 2)
+    pen.moveTo(this.x + 10, this.y)
+    pen.arc(this.x, this.y, 10, 0, Math.PI * 2)
   }
 }
 
