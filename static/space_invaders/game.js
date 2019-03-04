@@ -1,5 +1,5 @@
 import Player from './player.js'
-import Enemy from './enemy.js'
+import {Enemy} from './enemy.js'
 
 const [W, H] = [224, 256] // Game resolution
 const playerSpeed = 3
@@ -19,7 +19,6 @@ class Game {
 
     this.tick = 0
     this.enemyTick = enemyTicks[0]
-    console.log(this.enemyTick)
   }
 
   fitToScreen() {
@@ -80,8 +79,8 @@ class Game {
     step()
     pen.clearRect(0, 0, W, H)
     pen.beginPath()
-    player.draw(pen)
     enemies.forEach(e => e.draw(pen))
+    player.draw(pen)
     pen.stroke()
   }
 }
