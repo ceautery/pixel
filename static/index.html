@@ -183,6 +183,7 @@ nav button { display: block; }
     setFrame()
     pen.beginPath()
     pen.fillStyle = color
+    if (pen.fillStyle == '#ffffff') pen.fillStyle = '#ffffff00'
   }
 
   function setFrame() {
@@ -220,7 +221,7 @@ nav button { display: block; }
 
   function load() {
     stopDrawing = true
-    const name = select[select.selectedIndex].value
+    const name = '/sprites/' + select[select.selectedIndex].value
     const image = new Image()
     image.onload = _ => setImage(image)
     image.src = name

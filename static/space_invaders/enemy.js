@@ -29,7 +29,7 @@ function loadTemplate() {
       frames.push(image)
     }
   }
-  img.src = "/enemy"
+  img.src = "/sprites/enemy"
 }
 
 loadTemplate()
@@ -41,6 +41,7 @@ class Enemy {
     this.x = x * (size.x + padding) + margin
     this.y = y * (size.y + padding) + margin
     this.frame = 0
+    this.direction = 1
   }
 
   draw(pen) {
