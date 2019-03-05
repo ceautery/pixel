@@ -54,7 +54,7 @@ app.post('/set_user', (req, res) => {
   fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${id_token}`)
     .then(resp => resp.json().then(json => {
       const {name, sub, aud, email} = json
-      if (aud === client_id) {
+      if (aud === CLIENT_ID) {
         const id = `${sub}.${+new Date()}`
         users[id] = {
           spriteDir: path.join(baseSriteDir, email),
