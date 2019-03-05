@@ -60,7 +60,7 @@ app.post('/set_user', (req, res) => {
           spriteDir: path.join(baseSriteDir, email),
           activeGame: 'space_invaders'
         }
-        res.cookie('pixel_id', 'id')
+        res.cookie('pixel_id', id)
         res.json({ok: true})
       }
     }))
