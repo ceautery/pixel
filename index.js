@@ -55,13 +55,15 @@ app.post('/set_user', (req, res) => {
     .then(resp => resp.json().then(json => {
       const {name, sub, aud, email} = json
       if (aud === CLIENT_ID) {
+        const spriteDir = path.join(baseSriteDir, email)
         const id = `${sub}.${+new Date()}`
         users[id] = {
-          spriteDir: path.join(baseSriteDir, email),
+          spriteDir,
           activeGame: 'space_invaders'
         }
         res.cookie('pixel_id', id)
         res.json({ok: true})
+        fs.mkdir(spriteDir, () => {})
       }
     }))
 })
