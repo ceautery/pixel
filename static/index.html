@@ -181,6 +181,7 @@ nav button { display: block; }
   }
 
   function populate(list) {
+    document.querySelectorAll('option').forEach(o => o.remove())
     list.forEach(addOption)
   }
 
