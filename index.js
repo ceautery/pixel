@@ -57,13 +57,14 @@ app.post('/set_user', (req, res) => {
       if (aud === CLIENT_ID) {
         const spriteDir = path.join(baseSriteDir, email)
         const activeGame = 'space_invaders'
+        const gameSpriteDir = path.join(spriteDir, activeGame)
 
         const id = `${sub}.${+new Date()}`
         users[id] = {spriteDir, activeGame}
         res.cookie('pixel_id', id)
         res.json({ok: true})
-        fs.mkdir(spriteDir, () => {})
-        fs.mkdir(path.join(spriteDir, activeGame), () => {})
+        if(!fs.existsSync(spriteDir)) fs.mkdirSync(spriteDir)
+        if(!fs.existsSync(gameSpriteDir)) fs.mkdirSync(gameSpriteDir)
       }
     }))
 })
