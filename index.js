@@ -45,11 +45,16 @@ app.get('/list', (req, res) => {
 
 app.post('/set_user', (req, res) => {
   const id_token = req.body.id_token
-  if (id_token == 'curtis') {
-    res.cookie('pixel_id', 'curtis')
-    res.json({ok: true})
-    return
-  }
+  // const spriteDir = path.join(baseSriteDir, id_token)
+  // const activeGame = 'space_invaders'
+  // const gameSpriteDir = path.join(spriteDir, activeGame)
+  //
+  // users[id_token] = {spriteDir, activeGame}
+  // res.cookie('pixel_id', id_token)
+  // res.json({ok: true})
+  // if(!fs.existsSync(spriteDir)) fs.mkdirSync(spriteDir)
+  // if(!fs.existsSync(gameSpriteDir)) fs.mkdirSync(gameSpriteDir)
+  // return
 
   fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${id_token}`)
     .then(resp => resp.json().then(json => {

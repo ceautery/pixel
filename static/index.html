@@ -80,7 +80,7 @@ nav button { display: block; }
 </main>
 
 <div class="g-signin2" data-onsuccess="onSignIn"></div>
-<br />
+<!-- <input id="localName"></input> -->
 <!-- <button onclick="localSignIn()">Local sign in</button> -->
 
 <script src="https://apis.google.com/js/platform.js" async defer></script>
@@ -130,10 +130,11 @@ nav button { display: block; }
   }
 
   function localSignIn() {
+    const id_token = localName.value
     fetch('/set_user', {
       method: 'post',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({id_token: 'curtis'})
+      body: JSON.stringify({id_token})
     }).then(showPage)
   }
 
