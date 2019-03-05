@@ -3,10 +3,11 @@ import {Enemy} from './enemy.js'
 
 const [W, H] = [224, 256] // Game resolution
 const playerSpeed = 3
+const shotSpeed = 5
 const keys = {}
 const gameKeys = ['ArrowLeft', 'ArrowRight', ' ']
-const enemyTicks = [30, 30]
-const enemyCounts = [55, 54]
+const enemyTicks  = [30, 20, 10, 5, 3]
+const enemyCounts = [55, 50, 40, 2, 0]
 
 class Game {
   constructor(canvas) {
@@ -19,6 +20,7 @@ class Game {
 
     this.tick = 0
     this.enemyTick = enemyTicks[0]
+    this.gameOver = false
   }
 
   fitToScreen = () => {
@@ -66,20 +68,54 @@ class Game {
     if (this.tick >= this.enemyTick) {
       this.tick = 0
 
-    if (enemies.find(e => e.onWall)) {
+    if (enemies.some(e => e.onWall)) {
       enemies.forEach(e => {
         e.direction *= -1
         e.moveDown()
       })
     }
-     enemies.forEach(e => e.move())
+      enemies.forEach(e => e.move())
+      if (enemies.some(e => e.y + 11 > H)) this.gameOver = true
     }
 
-    if (keys.ArrowRight) player.x += playerSpeed
-    if (keys.ArrowLeft) player.x -= playerSpeed
+    if (keys.ArrowRight && player.x < W - 5) player.x += playerSpeed
+    if (keys.ArrowLeft && player.x > 5) player.x -= playerSpeed
+    if (keys[' '] && !this.shooting) this.shoot()
+
+    if (this.shooting) {
+      this.shot.y -= shotSpeed
+      if (this.shot.y <= 0) this.shooting = false
+      this.checkHit()
+    }
+  }
+
+  checkHit() {
+    const {shot, enemies} = this
+    const {x, y} = shot
+    const enemyNum = enemies.findIndex(e => {
+      return e.x <= x && 11 + e.x >= x && e.y <= y && 11 + e.y >= y
+    })
+    if (enemyNum > -1) {
+      enemies.splice(enemyNum, 1)
+      if (enemies.length == 0) {
+        this.gameOver = true
+        return
+      }
+      this.shooting = false
+      const tickIndex = enemyCounts.findIndex(c => c <= enemies.length)
+      this.enemyTick = enemyTicks[tickIndex]
+    }
+  }
+
+  shoot() {
+    this.shooting = true
+    const {x, y} = this.player
+    this.shot = {x, y}
   }
 
   draw = () => {
+    if (this.gameOver) return
+
     requestAnimationFrame(this.draw)
     const {pen, canvas, player, enemies, step} = this
 
@@ -89,6 +125,11 @@ class Game {
     enemies.forEach(e => e.draw(pen))
     player.draw(pen)
     pen.stroke()
+
+    if (this.shooting) {
+      const {x, y} = this.shot
+      pen.fillRect(x - 1, y, 2, 5)
+    }
   }
 }
 
