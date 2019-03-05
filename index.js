@@ -61,9 +61,9 @@ app.post('/set_user', (req, res) => {
           activeGame: 'space_invaders'
         }
         res.cookie('pixel_id', 'id')
+        res.json({ok: true})
       }
     }))
-  res.json({ok: true})
 })
 
 app.post('/set_game', (req, res) => {
