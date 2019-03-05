@@ -7,7 +7,13 @@ const path = require('path')
 const fetch = require('node-fetch')
 const cookieParser = require('cookie-parser')
 
-const users = {curtis: 'curtis'} // 
+const baseSriteDir = path.join(__dirname, 'sprites')
+const users = {
+  curtis: {
+    spriteDir: path.join(baseSriteDir, 'curtis'),
+    activeGame: 'space_invaders'
+  }
+}
 
 app.use(express.static('static'))
 app.use(bodyParser.json())
@@ -26,13 +32,11 @@ app.post('/save', (req, res) => {
 })
 
 app.get('/list', (req, res) => {
-  res.cookie('pixel_id', 'curtis')
   const dir = getSpriteDir(req)
-  console.log(dir)
-  console.log(req.url)
   if (!dir) {
     res.writeHead(404)
     res.end()
+    return
   }
 
   const list = fs.readdirSync(dir)
@@ -41,23 +45,40 @@ app.get('/list', (req, res) => {
 
 app.post('/set_user', (req, res) => {
   const id_token = req.body.id_token
+  if (id_token == 'curtis') {
+    res.cookie('pixel_id', 'curtis')
+    res.json({ok: true})
+    return
+  }
+
   fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${id_token}`)
     .then(resp => resp.json().then(json => {
       const {name, sub, aud, email} = json
       if (aud === client_id) {
         const id = `${sub}.${+new Date()}`
-        users[id] = email
+        users[id] = {
+          spriteDir: path.join(baseSriteDir, email),
+          activeGame: 'space_invaders'
+        }
         res.cookie('pixel_id', 'id')
       }
     }))
   res.json({ok: true})
 })
 
+app.post('/set_game', (req, res) => {
+  const user = getUser(req)
+  if (user) user.activeGame = req.body.game
+})
+
+function getUser(req) {
+  return users[req.cookies.pixel_id]
+}
+
 function getSpriteDir(req) {
-  console.log(req.cookies)
-  const cookie = req.cookies.pixel_id
-  if (cookie && users[cookie]) {
-    return path.join(__dirname, 'sprites', users[cookie], 'space_invaders')
+  const user = getUser(req)
+  if (user) {
+    return path.join(user.spriteDir, user.activeGame)
   }
 }
 
@@ -69,8 +90,6 @@ app.get('/sprites/*', (req, res) => {
   }
 
   const file = req.url.replace(/.+\//, '')
-  console.log(file)
-  console.log(req.url)
   const stream = fs.createReadStream(path.join(dir, file))
   stream.on('error', function() {
     res.writeHead(404)

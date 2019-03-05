@@ -5,7 +5,7 @@ const [W, H] = [224, 256] // Game resolution
 const playerSpeed = 3
 const keys = {}
 const gameKeys = ['ArrowLeft', 'ArrowRight', ' ']
-const enemyTicks = [45, 30]
+const enemyTicks = [30, 30]
 const enemyCounts = [55, 54]
 
 class Game {
@@ -21,7 +21,7 @@ class Game {
     this.enemyTick = enemyTicks[0]
   }
 
-  fitToScreen() {
+  fitToScreen = () => {
     const {pen} = this
     canvas.width = Math.min(innerWidth, (innerHeight * W / H) | 0) - 50
     canvas.height = (canvas.width * H / W) | 0
@@ -65,7 +65,14 @@ class Game {
     this.tick++
     if (this.tick >= this.enemyTick) {
       this.tick = 0
-      enemies.forEach(e => e.move())
+
+    if (enemies.find(e => e.onWall)) {
+      enemies.forEach(e => {
+        e.direction *= -1
+        e.moveDown()
+      })
+    }
+     enemies.forEach(e => e.move())
     }
 
     if (keys.ArrowRight) player.x += playerSpeed
