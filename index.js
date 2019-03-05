@@ -62,6 +62,7 @@ app.post('/set_user', (req, res) => {
         users[id] = {spriteDir, activeGame}
         res.cookie('pixel_id', id)
         res.json({ok: true})
+        fs.mkdir(spriteDir, () => {})
         fs.mkdir(path.join(spriteDir, activeGame), () => {})
       }
     }))
