@@ -115,14 +115,14 @@ nav button { display: block; }
   function showPage() {
     if (getCookie('pixel_id')) {
       document.querySelector('main').style.display = 'flex'
-      fetch('/list').then(resp => resp.json().then(populate))
+      fetch('list').then(resp => resp.json().then(populate))
     }
   }
 
   function onSignIn(googleUser) {
     const id_token = googleUser.getAuthResponse().id_token;
 
-    fetch('/set_user', {
+    fetch('set_user', {
       method: 'post',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({id_token})
@@ -131,7 +131,7 @@ nav button { display: block; }
 
   function localSignIn() {
     const id_token = localName.value
-    fetch('/set_user', {
+    fetch('set_user', {
       method: 'post',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({id_token})
@@ -254,7 +254,7 @@ nav button { display: block; }
     const name = select[select.selectedIndex].value
     const body = JSON.stringify({ image, name })
 
-    fetch('/save', { method, headers, body }).then(resp => resp.json().then(setError))
+    fetch('save', { method, headers, body }).then(resp => resp.json().then(setError))
   }
 
   function setError(body) {
@@ -263,7 +263,7 @@ nav button { display: block; }
 
   function load() {
     stopDrawing = true
-    const name = '/sprites/' + select[select.selectedIndex].value
+    const name = 'sprites/' + select[select.selectedIndex].value
     const image = new Image()
     image.onload = _ => setImage(image)
     image.src = name

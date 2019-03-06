@@ -8,20 +8,15 @@ const fetch = require('node-fetch')
 const cookieParser = require('cookie-parser')
 
 const baseSriteDir = path.join(__dirname, 'sprites')
-const users = {
-  curtis: {
-    spriteDir: path.join(baseSriteDir, 'curtis'),
-    activeGame: 'space_invaders'
-  }
-}
+const users = {}
 
 const loginHack = false
 
-app.use(express.static('static'))
+app.use('/pixel', express.static('static'))
 app.use(bodyParser.json())
 app.use(cookieParser())
 
-app.post('/save', (req, res) => {
+app.post('/pixel/save', (req, res) => {
   const dir = getSpriteDir(req)
   if (!dir) {
     res.writeHead(404)
@@ -33,7 +28,7 @@ app.post('/save', (req, res) => {
   fs.writeFile(filename, image, 'base64', error => res.json({success: !error}))
 })
 
-app.get('/list', (req, res) => {
+app.get('/pixel/list', (req, res) => {
   const dir = getSpriteDir(req)
   if (!dir) {
     res.writeHead(404)
@@ -45,7 +40,7 @@ app.get('/list', (req, res) => {
   res.json(list)
 })
 
-app.post('/set_user', (req, res) => {
+app.post('/pixel/set_user', (req, res) => {
   const id_token = req.body.id_token
 
   if (loginHack) {
@@ -79,7 +74,7 @@ app.post('/set_user', (req, res) => {
     }))
 })
 
-app.post('/set_game', (req, res) => {
+app.post('/pixel/set_game', (req, res) => {
   const user = getUser(req)
   if (user) user.activeGame = req.body.game
 })
@@ -95,7 +90,7 @@ function getSpriteDir(req) {
   }
 }
 
-app.get('/sprites/*', (req, res) => {
+app.get('/pixel/sprites/*', (req, res) => {
   const dir = getSpriteDir(req)
   if (!dir) {
     res.writeHead(404)

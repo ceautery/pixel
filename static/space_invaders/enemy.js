@@ -30,7 +30,7 @@ function loadTemplate() {
       frames.push(image)
     }
   }
-  img.src = "/sprites/enemy"
+  img.src = "sprites/enemy"
 }
 
 loadTemplate()
