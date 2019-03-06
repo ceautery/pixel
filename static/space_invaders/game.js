@@ -21,9 +21,12 @@ class Game {
     this.tick = 0
     this.enemyTick = enemyTicks[0]
     this.gameOver = false
+    this.fitToScreen = this.fitToScreen.bind(this)
+    this.step = this.step.bind(this)
+    this.draw = this.draw.bind(this)
   }
 
-  fitToScreen = () => {
+  fitToScreen() {
     const {pen} = this
     canvas.width = Math.min(innerWidth, (innerHeight * W / H) | 0) - 50
     canvas.height = (canvas.width * H / W) | 0
@@ -61,7 +64,7 @@ class Game {
     this.draw()
   }
 
-  step = () => {
+  step() {
     const {player, enemies, enemyTick} = this
 
     this.tick++
@@ -113,7 +116,7 @@ class Game {
     this.shot = {x, y}
   }
 
-  draw = () => {
+  draw() {
     if (this.gameOver) return
 
     requestAnimationFrame(this.draw)
