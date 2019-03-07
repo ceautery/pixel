@@ -6,12 +6,14 @@ const fs = require('fs')
 const path = require('path')
 const fetch = require('node-fetch')
 const cookieParser = require('cookie-parser')
+const serveIndex = require('serve-index')
 
 const baseSriteDir = path.join(__dirname, 'sprites')
 const users = {}
 
 const loginHack = false
 
+app.use('/pixel/all', express.static('sprites'), serveIndex('sprites'))
 app.use('/pixel', express.static('static'))
 app.use(bodyParser.json())
 app.use(cookieParser())
