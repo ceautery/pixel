@@ -28,6 +28,18 @@ app.post('/pixel/save', (req, res) => {
   fs.writeFile(filename, image, 'base64', error => res.json({success: !error}))
 })
 
+app.post('/pixel/rename', (req, res) => {
+  const dir = getSpriteDir(req)
+  if (!dir) {
+    res.writeHead(404)
+    res.end()
+  }
+
+  const filename = path.join(dir, req.body.name)
+  const newName = path.join(dir, req.body.newName)
+  fs.rename(filename, newName, error => res.json({success: !error}))
+})
+
 app.get('/pixel/list', (req, res) => {
   const dir = getSpriteDir(req)
   if (!dir) {

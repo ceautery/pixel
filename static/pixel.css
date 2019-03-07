@@ -1,0 +1,67 @@
+canvas {
+  border: solid;
+  image-rendering: pixelated;
+}
+
+#error { color: red; }
+
+select {
+  font-size: 1em;
+  width: 10em;
+}
+
+option { margin: 2px; }
+
+select:focus {
+  outline: none;
+}
+
+main {
+  display: none;
+  width: 100%;
+  height: 100%;
+  margin: auto;
+  align-items: center;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  border-radius: 2em;
+}
+
+section {
+  width: 60%;
+  height: 100%;
+  background: white;
+  border-radius: 1em;
+}
+
+#frames {
+  width: 30%;
+}
+
+button, input {
+  margin: 10px;
+  width: 100px;
+  height: 40px;
+  font-size: 1em;
+  background: transparent;
+  display: inline;
+  vertical-align: middle;
+}
+
+nav {
+  padding: 5px;
+}
+
+nav button { display: block; }
+
+#frameContainer img {
+  display: block;
+  border: 1px solid;
+  margin: 5px;
+  image-rendering: pixelated;
+}
+
+#frameContainer img.selected {
+  border: 3px solid red;
+  margin: 3px;
+}
