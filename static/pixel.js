@@ -1,5 +1,5 @@
 const scale = 20
-const size = 11
+const size = 15
 canvas.width = size
 canvas.height = size
 canvas.style.width = size * scale + 'px'
@@ -201,6 +201,14 @@ async function save() {
   frames.forEach( (image, index) => {
     ctx.drawImage(image, size * index, 0)
   })
+
+  const id = ctx.getImageData(0, 0, offscreen.width, offscreen.height)
+  for (let i = 0; i < id.data.length; i += 4) {
+    if (id.data[i] == 255 && id.data[i + 1] == 255 && id.data[i + 2] == 255) {
+      id.data[i + 3] = 0
+    }
+  }
+  ctx.putImageData(id, 0, 0)
 
   const image = offscreen.toDataURL()
   const name = select[select.selectedIndex].value

@@ -7,7 +7,7 @@
     <canvas id="canvas"></canvas><br />
     <input type="color" onchange="setColor(this.value)">
     <button onclick="newFrame()">New frame</button>
-    <p>Create a sprite named "enemy", and then <a href="space_invaders">click here</a> to play some Space Invaders</p>
+    <p>Create sprites named "coin" and "lava", and then <a href="dark_blue">click here</a> to play Dark Blue</p>
 
     <div style="display: flex;">
     <select id="sprites" size="10" onchange="load()"></select>
@@ -25,9 +25,9 @@
   </section>
 </main>
 
-<div class="g-signin2" data-onsuccess="onSignIn"></div>
-<!-- <input size="25" id="localName"></input> -->
-<!-- <button onclick="localSignIn()">Local sign in</button> -->
+<!-- <div class="g&#45;signin2" data&#45;onsuccess="onSignIn"></div> -->
+<input size="25" id="localName"></input>
+<button onclick="localSignIn()">Local sign in</button>
 
 <script src="https://apis.google.com/js/platform.js" async defer></script>
 <script src="pixel.js"></script>

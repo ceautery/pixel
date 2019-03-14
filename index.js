@@ -11,10 +11,11 @@ const serveIndex = require('serve-index')
 const baseSriteDir = path.join(__dirname, 'sprites')
 const users = {}
 
-const loginHack = false
+const loginHack = true
 
-app.use('/pixel/all', express.static('sprites'), serveIndex('sprites'))
+// app.use('/pixel/all', express.static('sprites'), serveIndex('sprites'))
 app.use('/pixel', express.static('static'))
+
 app.use(bodyParser.json())
 app.use(cookieParser())
 
@@ -59,7 +60,7 @@ app.post('/pixel/set_user', (req, res) => {
 
   if (loginHack) {
     const spriteDir = path.join(baseSriteDir, id_token)
-    const activeGame = 'space_invaders'
+    const activeGame = 'dark_blue'
     const gameSpriteDir = path.join(spriteDir, activeGame)
 
     users[id_token] = {spriteDir, activeGame}
@@ -75,7 +76,7 @@ app.post('/pixel/set_user', (req, res) => {
       const {name, sub, aud, email} = json
       if (aud === CLIENT_ID) {
         const spriteDir = path.join(baseSriteDir, email)
-        const activeGame = 'space_invaders'
+        const activeGame = 'dark_blue'
         const gameSpriteDir = path.join(spriteDir, activeGame)
 
         const id = `${sub}.${+new Date()}`
