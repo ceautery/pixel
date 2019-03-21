@@ -1,0 +1,33 @@
+<meta name="google-signin-client_id" content="495982056560-ckkrv6pmrp5de7hhh9kk5hs22do83enu.apps.googleusercontent.com">
+<link href="pixel.css" rel="stylesheet">
+<div id="error"></div>
+<main>
+  <section id="left">
+    <div id="frameCounter"></div>
+    <canvas id="canvas"></canvas><br />
+    <input type="color" onchange="setColor(this.value)">
+    <button onclick="newFrame()">New frame</button>
+    <p>Create sprites named "coin" and "lava", and then <a href="dark_blue">click here</a> to play Dark Blue</p>
+
+    <div style="display: flex;">
+    <select id="sprites" size="10" onchange="load()"></select>
+    <nav>
+      <button onclick="newSprite()">New sprite</button>
+      <button onclick="save()">Save</button>
+      <button onclick="rename()">Rename</button>
+    </nav>
+    </div>
+  </section>
+
+  <section id="frames">
+    <div>Frames</div>
+    <div id="frameContainer"></div>
+  </section>
+</main>
+
+<!-- <div class="g&#45;signin2" data&#45;onsuccess="onSignIn"></div> -->
+<input size="25" id="localName"></input>
+<button onclick="localSignIn()">Local sign in</button>
+
+<script src="https://apis.google.com/js/platform.js" async defer></script>
+<script src="pixel.js"></script>

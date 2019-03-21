@@ -21,6 +21,7 @@
     "cookie-parser": "^1.4.4",
     "express": "^4.16.4",
     "google-auth-library": "^2.0.2",
-    "serve-index": "^1.9.1"
+    "serve-index": "^1.9.1",
+    "ws": "^6.2.0"
   }
 }

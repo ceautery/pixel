@@ -8,10 +8,33 @@ const fetch = require('node-fetch')
 const cookieParser = require('cookie-parser')
 const serveIndex = require('serve-index')
 
+const WebSocket = require('ws')
+const wss = new WebSocket.Server({ port: 8080 })
+
 const baseSriteDir = path.join(__dirname, 'sprites')
 const users = {}
 
 const loginHack = true
+const games = [
+  {
+    name: 'space_invaders',
+    templates: [
+      { name: 'player', w: 11, h: 11 },
+      { name: 'enemy', w: 11, h: 11 },
+      { name: 'enemy2', w: 11, h: 11 },
+      { name: 'enemy3', w: 11, h: 11 }
+    ]
+  },{
+    name: 'dark_blue',
+    templates: [
+      { name: 'player', w: 11, h: 11, actions: ['move', 'jump'] },
+      { name: 'coin', w: 11, h: 11 },
+      { name: 'lava', w: 11, h: 11 },
+    ]
+  }
+]
+const gameNames = games.map(g => g.name)
+
 
 // app.use('/pixel/all', express.static('sprites'), serveIndex('sprites'))
 app.use('/pixel', express.static('static'))
@@ -55,19 +78,36 @@ app.get('/pixel/list', (req, res) => {
   res.json(list)
 })
 
+app.get('/pixel/games', (req, res) => {
+  res.json(games)
+})
+
+function setUser(email, id) {
+  const spriteDir = path.join(baseSriteDir, email)
+  const activeGame = 'space_invaders'
+  const activeTemplate = 'enemy'
+  users[id] = {spriteDir, activeGame, activeTemplate}
+
+  if(!fs.existsSync(spriteDir)) fs.mkdirSync(spriteDir)
+  games.forEach(game => {
+    const gameSpriteDir = path.join(spriteDir, game.name)
+    if(!fs.existsSync(gameSpriteDir)) fs.mkdirSync(gameSpriteDir)
+    game.templates.forEach(template => {
+      const templateDir = path.join(gameSpriteDir, template.name)
+      if(!fs.existsSync(templateDir)) fs.mkdirSync(templateDir)
+    })
+  })
+
+  return users[id]
+}
+
 app.post('/pixel/set_user', (req, res) => {
   const id_token = req.body.id_token
 
   if (loginHack) {
-    const spriteDir = path.join(baseSriteDir, id_token)
-    const activeGame = 'dark_blue'
-    const gameSpriteDir = path.join(spriteDir, activeGame)
-
-    users[id_token] = {spriteDir, activeGame}
+    const user = setUser(id_token, id_token)
     res.cookie('pixel_id', id_token)
-    res.json({ok: true})
-    if(!fs.existsSync(spriteDir)) fs.mkdirSync(spriteDir)
-    if(!fs.existsSync(gameSpriteDir)) fs.mkdirSync(gameSpriteDir)
+    res.json({ok: true, user})
     return
   }
 
@@ -75,23 +115,48 @@ app.post('/pixel/set_user', (req, res) => {
     .then(resp => resp.json().then(json => {
       const {name, sub, aud, email} = json
       if (aud === CLIENT_ID) {
-        const spriteDir = path.join(baseSriteDir, email)
-        const activeGame = 'dark_blue'
-        const gameSpriteDir = path.join(spriteDir, activeGame)
-
         const id = `${sub}.${+new Date()}`
-        users[id] = {spriteDir, activeGame}
+        const user = setUser(email, id)
         res.cookie('pixel_id', id)
-        res.json({ok: true})
-        if(!fs.existsSync(spriteDir)) fs.mkdirSync(spriteDir)
-        if(!fs.existsSync(gameSpriteDir)) fs.mkdirSync(gameSpriteDir)
+        res.json({ok: true, user})
       }
     }))
 })
 
+app.get('/pixel/get_user', (req, res) => {
+  const user = getUser(req)
+  res.json({user})
+})
+
 app.post('/pixel/set_game', (req, res) => {
   const user = getUser(req)
-  if (user) user.activeGame = req.body.game
+  const game = req.body.game
+  if (user && gameNames.includes(game)) {
+    user.activeGame = game
+    user.activeTemplate = games.find(g => g.name == game).templates[0].name
+    res.json({success: true})
+  } else {
+    res.json({success: false})
+  }
+})
+
+app.post('/pixel/set_template', (req, res) => {
+  const user = getUser(req)
+  const template = req.body.template
+
+  if (!user) {
+    res.json({success: false, message: 'User not found'})
+    return
+  }
+
+  const game = games.find(g => g.name == user.activeGame)
+  const templateNames = game.templates.map(t => t.name)
+  if (templateNames.includes(req.body.template)) {
+    user.activeTemplate = req.body.template
+    res.json({success: true})
+  } else {
+    res.json({success: false, message: 'Template not found'})
+  }
 })
 
 function getUser(req) {
@@ -101,7 +166,7 @@ function getUser(req) {
 function getSpriteDir(req) {
   const user = getUser(req)
   if (user) {
-    return path.join(user.spriteDir, user.activeGame)
+    return path.join(user.spriteDir, user.activeGame, user.activeTemplate)
   }
 }
 
@@ -122,3 +187,26 @@ app.get('/pixel/sprites/*', (req, res) => {
 })
 
 app.listen(3000, _ => console.log('running'))
+
+// wss.on('connection', function connection(ws) {
+//   ws.on('message', function incoming(message) {
+//     const obj = JSON.parse(message)
+//     if (obj.set_user) {
+//       ws.user = users[obj.set_user]
+//       console.log("Set user to", ws.user)
+//     }
+//
+//     if(obj.set_game && games.includes(obj.set_game)) {
+//       ws.game = obj.set_game
+//     }
+//
+//     if(obj.set_sprite) {
+//       if (ws.logStream) ws.logStream.close()
+//       ws.logStream = fs.createWriteStream('log.txt', {flags: 'a'})
+//     }
+//
+//     console.log('received: %s', message)
+//   })
+//
+//   ws.send('something')
+// })
