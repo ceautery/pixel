@@ -3,32 +3,46 @@ let user
 let games = []
 let game
 let template
+let sprites = []
+let sprite
 let action
-let frames
+let frames = []
+let frame
 
-const example=`
-  init 64 64
-  dot 20,20 21,20
-  color #663399
-  dot 20,40 21,40 21,41 20,41
-  color blue
-  dot 30,40 31,40 31,41 30,41
-  color red
-  dot 20,30 21,30 21,31 20,31
-  `
-
-const scale = 10
+const scale = 20
 const offscreen = document.createElement('canvas')
 const pen = offscreen.getContext('2d')
 const ctx = canvas.getContext('2d')
 // let ws
 
-const sprite = {
-  w: 64,
-  h: 64,
-  layers: [],
-  selection: null,
-  color: '#000000ff'
+canvas.addEventListener('mousemove', addPoint)
+canvas.addEventListener('mousedown', addPoint)
+let stopDrawing = true
+
+function draw() {
+  if (stopDrawing) return
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
+  ctx.drawImage(frame, 0, 0)
+  ctx.fill()
+}
+
+function addPoint(e) {
+  if (stopDrawing) return
+
+  const x = toScale(e.offsetX)
+  const y = toScale(e.offsetY)
+  if (e.buttons) {
+    ctx.rect(x, y, 1, 1)
+    draw()
+  } else {
+    draw()
+    ctx.fillRect(x, y, 1, 1)
+  }
+}
+
+function toScale(num) {
+  return Math.floor(num / scale)
 }
 
 function getCookie(key) {
@@ -44,6 +58,7 @@ function capitalCase(name) {
 }
 
 async function changeGame(g, t) {
+  stopDrawing = true
   changer.style.display = 'none'
   gameList.style.display = 'none'
   if (game == g) return
@@ -64,16 +79,15 @@ async function changeGame(g, t) {
     templateList.append(div)
   })
   changeTemplate(t || game.templates[0])
-
-  // spriteList.style.display = 'none';
-  // actionList.style.display = 'none';
 }
 
 async function changeTemplate(t) {
+  stopDrawing = true
   changer.style.display = 'none'
   templateList.style.display = 'none'
   if (template == t) return
   template = t
+  if (!template.actions) template.actions = ['default']
 
   templateContainer.innerText = template.name
   await fetch('set_template', {
@@ -83,8 +97,8 @@ async function changeTemplate(t) {
   })
 
   resp = await fetch('list')
-  const sprites = await resp.json()
-  spriteList.innerHTML = `<div onclick="changeSprite('new')">new</div>`
+  sprites = await resp.json()
+  spriteList.innerHTML = `<div onclick="addSprite()">new</div>`
   sprites.forEach(s => {
     const div = document.createElement('div')
     div.append(new Text(s))
@@ -94,15 +108,152 @@ async function changeTemplate(t) {
   changeSprite(sprites.length ? sprites[0] : 'new')
 }
 
-function changeSprite(sprite) {
+function addSprite() {
+  stopDrawing = true
   changer.style.display = 'none'
   spriteList.style.display = 'none'
-  if (sprite == 'new') { alert('new') }
-  else {
+
+  let name = prompt("Name for new sprite:")
+  if (!name) return
+  name = name.toLowerCase().trim()
+  if (sprites.includes(name)) {
+    alert("Name in use")
+    return
+  }
+
+  sprite = {
+    name,
+    image: new Image(),
+    actions: [],
+    action: 0,
+    frame: 0
+  }
+
+  for (let y = 0; y < template.actions.length; y++) {
+    const action = { frames: [] }
+    sprite.actions.push(action)
+    const id = ctx.createImageData(template.w, template.h)
+
+    offscreen.width = template.w
+    offscreen.height = template.h
+    pen.putImageData(id, 0, 0)
+    const img = new Image()
+    action.frames.push(img)
+    spriteContainer.innerText = name
+    if (y == 0) {
+      img.onload = () => changeAction(template.actions[0])
+    }
+    img.src = offscreen.toDataURL()
   }
 }
 
-function changeAction(action) {
+function changeSprite(name) {
+  stopDrawing = true
+  changer.style.display = 'none'
+  spriteList.style.display = 'none'
+
+  canvas.width = scale * template.w
+  canvas.height = scale * template.h
+  spriteContainer.innerText = name
+  framesContainer.innerHTML = ''
+
+  if (name == 'new') return
+
+  sprite = {
+    name,
+    image: new Image(),
+    actions: [],
+    action: 0,
+    frame: 0
+  }
+
+  sprite.image.onload = () => {
+    const w = sprite.image.width / template.w
+    canvas.width = sprite.image.width
+    canvas.height = sprite.image.height
+    ctx.drawImage(sprite.image, 0, 0)
+
+    for (let y = 0; y < template.actions.length; y++) {
+      const action = { frames: [] }
+      sprite.actions.push(action)
+      offscreen.width = template.w
+      offscreen.height = template.h
+
+      for (let x = 0; x < w; x++) {
+        const id = ctx.getImageData(x * template.w, y * template.h, template.w, template.h)
+        const view = new Uint32Array(id.data.buffer)
+        if (view.map(e => (e >> 24) & 255).some(e => e)) {
+          pen.putImageData(id, 0, 0)
+          const img = new Image()
+          if (x == 0 && y == 0) img.onload = () => changeAction(template.actions[0])
+          img.src = offscreen.toDataURL()
+          action.frames.push(img)
+        }
+      }
+    }
+  }
+
+  sprite.image.src = `sprites/${name}`
+}
+
+function changeAction(name) {
+  stopDrawing = true
+  const index = template.actions.findIndex(a => a == name)
+  action = sprite.actions[index]
+  framesContainer.innerHTML = ''
+  action.frames.forEach((img, index) => {
+    framesContainer.append(img)
+    img.onclick = () => changeFrame(index)
+    img.style.width = (template.w * 4) + 'px'
+  })
+
+  canvas.width = template.w * scale
+  canvas.height = template.h * scale
+  ctx.imageSmoothingEnabled = false
+  ctx.scale(scale, scale)
+  setColor('red')
+  changeFrame(0)
+}
+
+async function changeFrame(index) {
+  if (frame) await save
+
+  stopDrawing = true
+  frame = action.frames[index]
+  ctx.clearRect(0, 0, frame.width, frame.height)
+  ctx.drawImage(frame, 0, 0)
+  ctx.beginPath()
+  framePicker.innerText = `Frame ${index + 1} of ${action.frames.length}`
+  action.frames.forEach(f => f.className = f === frame ? 'selected' : '')
+  stopDrawing = false
+}
+
+async function save() {
+  return
+  await setFrame()
+
+  const offscreen = document.createElement('canvas')
+  offscreen.width = frames.length * size
+  offscreen.height = size
+  const ctx = offscreen.getContext('2d')
+
+  frames.forEach( (image, index) => {
+    ctx.drawImage(image, size * index, 0)
+  })
+
+  const id = ctx.getImageData(0, 0, offscreen.width, offscreen.height)
+  for (let i = 0; i < id.data.length; i += 4) {
+    if (id.data[i] == 255 && id.data[i + 1] == 255 && id.data[i + 2] == 255) {
+      id.data[i + 3] = 0
+    }
+  }
+  ctx.putImageData(id, 0, 0)
+
+  const image = offscreen.toDataURL()
+  const name = select[select.selectedIndex].value
+  const body = JSON.stringify({ image, name })
+
+  fetch('save', { method, headers, body }).then(resp => resp.json().then(body => setError(body, 'Saved')))
 }
 
 function showGames() {
@@ -155,10 +306,6 @@ async function showPage(resp) {
   }
 }
 
-function populate(resp) {
-  console.log(resp)
-}
-
 function onSignIn(googleUser) {
   const id_token = googleUser.getAuthResponse().id_token;
 
@@ -180,14 +327,10 @@ function localSignIn() {
 
 showPage()
 
-const commands = { init, dot, color, select }
+const commands = { init, dot, setColor, select }
 
-function init(w, h) {
-  sprite.w = w
-  sprite.h = h
-  sprite.layers.length = 0
-  sprite.layers.push(pen.createImageData(w, h))
-  sprite.selection = null
+function init() {
+  const {w, h, color} = frame
 
   canvas.width = w * scale
   canvas.height = h * scale
@@ -196,15 +339,15 @@ function init(w, h) {
 
   offscreen.width = w
   offscreen.height = h
-  color('#000000ff')
+  setColor(color)
 }
 
 function dot(x, y) {
   pen.fillRect(x, y, 1, 1)
 }
 
-function color(color) {
-  pen.fillStyle = color
+function setColor(color) {
+  ctx.fillStyle = color
   palette.style.color = color
 }
 
@@ -219,50 +362,53 @@ function step(command, fields) {
   command(...fields)
 }
 
-async function drawFromLog(line) {
-  const fields = line.split(/\s+/)
-  const command = commands[fields.shift()]
-  if (!command) {
-    error(`No command ${command}`)
-    return
-  }
+// const example=`
+//   init 64 64
+//   dot 20,20 21,20
+//   color #663399
+//   dot 20,40 21,40 21,41 20,41
+//   color blue
+//   dot 30,40 31,40 31,41 30,41
+//   color red
+//   dot 20,30 21,30 21,31 20,31
+//   `
 
-  if (command == dot) {
-    while (fields.length) {
-      const coords = fields.shift().split(',')
-      step(dot, coords)
-    }
-  } else {
-    step(command, fields)
-  }
-  updateCanvas()
-}
+// async function drawFromLog(line) {
+//   const fields = line.split(/\s+/)
+//   const command = commands[fields.shift()]
+//   if (!command) {
+//     error(`No command ${command}`)
+//     return
+//   }
+//
+//   if (command == dot) {
+//     while (fields.length) {
+//       const coords = fields.shift().split(',')
+//       step(dot, coords)
+//     }
+//   } else {
+//     step(command, fields)
+//   }
+//   updateCanvas()
+// }
 
-function updateCanvas() {
-  const {w, h} = sprite
-  const i = new Image()
-  ctx.clearRect(0, 0, w, h)
-  i.onload = _ => ctx.drawImage(i, 0, 0)
-  i.src = offscreen.toDataURL()
-}
+// function addOption(line) {
+//   const option = document.createElement('option')
+//   option.append(new Text(line))
+//   timeTravel.append(option)
+// }
 
-function addOption(line) {
-  const option = document.createElement('option')
-  option.append(new Text(line))
-  timeTravel.append(option)
-}
-
-function travel(index) {
-  index = index | 0
-  log.slice(0, index + 1).forEach(drawFromLog)
-}
-
-function drawExample() {
-  log = example.match(/\S.+/g).map(line => line.trim())
-  const index = log.length - 1
-  stepNumber.max = index
-  travel(index)
-}
-
-drawExample()
+// function travel(index) {
+//   index = index | 0
+//   log.slice(0, index + 1).forEach(drawFromLog)
+// }
+//
+// function drawExample() {
+//   log = example.match(/\S.+/g).map(line => line.trim())
+//   const index = log.length - 1
+//   stepNumber.max = index
+//   travel(index)
+// }
+//
+// drawExample()
 

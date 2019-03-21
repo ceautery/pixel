@@ -70,3 +70,15 @@ canvas { border: solid; margin-right: 1em; }
   line-height: 1.5em;
   display: none;
 }
+
+#framesContainer img {
+  display: block;
+  border: 1px solid;
+  margin: 5px;
+  image-rendering: pixelated;
+}
+
+#framesContainer img.selected {
+  border: 3px solid red;
+  margin: 3px;
+}

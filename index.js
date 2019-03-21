@@ -27,9 +27,9 @@ const games = [
   },{
     name: 'dark_blue',
     templates: [
-      { name: 'player', w: 11, h: 11, actions: ['move', 'jump'] },
-      { name: 'coin', w: 11, h: 11 },
-      { name: 'lava', w: 11, h: 11 },
+      { name: 'player', w: 15, h: 15, actions: ['move', 'jump'] },
+      { name: 'coin', w: 15, h: 15 },
+      { name: 'lava', w: 15, h: 15 },
     ]
   }
 ]
