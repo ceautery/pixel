@@ -82,3 +82,7 @@ canvas { border: solid; margin-right: 1em; }
   border: 3px solid red;
   margin: 3px;
 }
+
+.newSprite {
+  color: blue;
+}

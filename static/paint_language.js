@@ -1,4 +1,4 @@
-let log = []
+let spriteLog = []
 let user
 let games = []
 let game
@@ -17,6 +17,7 @@ const ctx = canvas.getContext('2d')
 
 canvas.addEventListener('mousemove', addPoint)
 canvas.addEventListener('mousedown', addPoint)
+canvas.addEventListener('mouseout', draw)
 let stopDrawing = true
 
 function draw() {
@@ -33,7 +34,7 @@ function addPoint(e) {
   const x = toScale(e.offsetX)
   const y = toScale(e.offsetY)
   if (e.buttons) {
-    ctx.rect(x, y, 1, 1)
+    dot(x, y)
     draw()
   } else {
     draw()
@@ -98,14 +99,17 @@ async function changeTemplate(t) {
 
   resp = await fetch('list')
   sprites = await resp.json()
-  spriteList.innerHTML = `<div onclick="addSprite()">new</div>`
-  sprites.forEach(s => {
-    const div = document.createElement('div')
-    div.append(new Text(s))
-    div.onclick = () => changeSprite(s)
-    spriteList.append(div)
-  })
+  spriteList.innerHTML = `<div onclick="addSprite()" class="newSprite">new</div>`
+  sprites.forEach(addSpriteNameToList)
+  sprite = { name: null }
   changeSprite(sprites.length ? sprites[0] : 'new')
+}
+
+function addSpriteNameToList(name) {
+  const div = document.createElement('div')
+  div.append(new Text(name))
+  div.onclick = () => changeSprite(name)
+  spriteList.append(div)
 }
 
 function addSprite() {
@@ -145,12 +149,22 @@ function addSprite() {
     }
     img.src = offscreen.toDataURL()
   }
+  addSpriteNameToList(name)
 }
 
-function changeSprite(name) {
-  stopDrawing = true
+async function changeSprite(name) {
   changer.style.display = 'none'
   spriteList.style.display = 'none'
+  if (name == sprite.name) {
+    console.log('Same sprite chosen')
+    return
+  }
+  if (name == sprite.name) {
+    console.log('Same sprite chosen')
+    return
+  }
+
+  stopDrawing = true
 
   canvas.width = scale * template.w
   canvas.height = scale * template.h
@@ -193,17 +207,25 @@ function changeSprite(name) {
     }
   }
 
-  sprite.image.src = `sprites/${name}`
+  await loadLog(name)
+  sprite.image.src = `sprites/${name}.png`
+}
+
+async function loadLog(name) {
+  // const resp = await fetch(`sprites/${name}.log`)
 }
 
 function changeAction(name) {
   stopDrawing = true
+  log(`changeAction ${name}`)
   const index = template.actions.findIndex(a => a == name)
   action = sprite.actions[index]
   framesContainer.innerHTML = ''
   action.frames.forEach((img, index) => {
     framesContainer.append(img)
     img.onclick = () => changeFrame(index)
+    img.ondragstart = img.onclick
+    img.ondragend = e => reindex(e, index)
     img.style.width = (template.w * 4) + 'px'
   })
 
@@ -213,6 +235,26 @@ function changeAction(name) {
   ctx.scale(scale, scale)
   setColor('red')
   changeFrame(0)
+}
+
+function reindex(e, index) {
+  const { frames } = action
+  frames.splice(index, 1)
+  const tops = frames.map(f => f.getBoundingClientRect().y)
+  const nextLowest = frames.findIndex((f, i) => tops[i] > e.clientY)
+  const newIndex = nextLowest == -1 ? frames.length : nextLowest
+  frames.splice(newIndex, 0, e.target)
+  if (index == newIndex) return
+
+  framesContainer.innerHTML = ''
+  frames.forEach((img, index) => {
+    framesContainer.append(img)
+    img.onclick = () => changeFrame(index)
+    img.ondragstart = img.onclick
+    img.ondragend = e => reindex(e, index)
+  })
+  changeFrame(newIndex)
+  log(`frameMove ${index} ${newIndex}`)
 }
 
 async function changeFrame(index) {
@@ -267,8 +309,12 @@ function showTemplates() {
 }
 
 function showSprites() {
-  changer.style.display = 'block'
-  spriteList.style.display = 'block'
+  if (spriteContainer.innerText == 'new') {
+    addSprite()
+  } else {
+    changer.style.display = 'block'
+    spriteList.style.display = 'block'
+  }
 }
 
 async function showPage(resp) {
@@ -343,10 +389,12 @@ function init() {
 }
 
 function dot(x, y) {
-  pen.fillRect(x, y, 1, 1)
+  log(`dot ${x} ${y}`)
+  ctx.rect(x, y, 1, 1)
 }
 
 function setColor(color) {
+  log(`setColor ${color}`)
   ctx.fillStyle = color
   palette.style.color = color
 }
@@ -360,6 +408,10 @@ function error(msg) {
 
 function step(command, fields) {
   command(...fields)
+}
+
+function log(message) {
+  console.log(message)
 }
 
 // const example=`

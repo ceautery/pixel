@@ -74,7 +74,7 @@ app.get('/pixel/list', (req, res) => {
     return
   }
 
-  const list = fs.readdirSync(dir)
+  const list = fs.readdirSync(dir).map(name => name.replace(/\.png$/, ''))
   res.json(list)
 })
 
