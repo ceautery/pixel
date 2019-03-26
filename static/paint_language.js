@@ -6,8 +6,9 @@ let template
 let sprites = []
 let sprite
 let action
-let frames = []
 let frame
+let frameIndex
+let lastLogMsg
 
 const scale = 20
 const offscreen = document.createElement('canvas')
@@ -17,7 +18,7 @@ const ctx = canvas.getContext('2d')
 
 canvas.addEventListener('mousemove', addPoint)
 canvas.addEventListener('mousedown', addPoint)
-canvas.addEventListener('mouseout', draw)
+canvas.addEventListener('mouseout', save)
 let stopDrawing = true
 
 function draw() {
@@ -26,6 +27,7 @@ function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height)
   ctx.drawImage(frame, 0, 0)
   ctx.fill()
+  pen.fill()
 }
 
 function addPoint(e) {
@@ -153,6 +155,7 @@ function addSprite() {
 }
 
 async function changeSprite(name) {
+  lastLogMsg = null
   changer.style.display = 'none'
   spriteList.style.display = 'none'
   if (name == sprite.name) {
@@ -166,8 +169,6 @@ async function changeSprite(name) {
 
   stopDrawing = true
 
-  canvas.width = scale * template.w
-  canvas.height = scale * template.h
   spriteContainer.innerText = name
   framesContainer.innerHTML = ''
 
@@ -182,11 +183,13 @@ async function changeSprite(name) {
   }
 
   sprite.image.onload = () => {
+    console.log('load')
     const w = sprite.image.width / template.w
     canvas.width = sprite.image.width
     canvas.height = sprite.image.height
     ctx.drawImage(sprite.image, 0, 0)
 
+    const promises = []
     for (let y = 0; y < template.actions.length; y++) {
       const action = { frames: [] }
       sprite.actions.push(action)
@@ -199,12 +202,16 @@ async function changeSprite(name) {
         if (view.map(e => (e >> 24) & 255).some(e => e)) {
           pen.putImageData(id, 0, 0)
           const img = new Image()
-          if (x == 0 && y == 0) img.onload = () => changeAction(template.actions[0])
-          img.src = offscreen.toDataURL()
+          promises.push(new Promise(resolve => { img.onload = resolve }))
           action.frames.push(img)
+          img.src = offscreen.toDataURL()
         }
       }
     }
+    Promise.all(promises).then( () => {
+      console.log('promises')
+      changeAction(template.actions[0])
+    })
   }
 
   await loadLog(name)
@@ -223,20 +230,24 @@ function setFrameProps(img, index) {
   img.style.width = (template.w * 4) + 'px'
 }
 
-function changeAction(name) {
-  stopDrawing = true
-  log(`changeAction ${name}`)
-  const index = template.actions.findIndex(a => a == name)
-  action = sprite.actions[index]
+function drawFrames(index) {
   framesContainer.innerHTML = ''
   action.frames.forEach(setFrameProps)
+  changeFrame(index)
+}
+
+function changeAction(name) {
+  stopDrawing = true
+  log(`action ${name}`)
+  const index = template.actions.findIndex(a => a == name)
+  action = sprite.actions[index]
 
   canvas.width = template.w * scale
   canvas.height = template.h * scale
   ctx.imageSmoothingEnabled = false
   ctx.scale(scale, scale)
+  drawFrames(0)
   setColor('red')
-  changeFrame(0)
 }
 
 function reindex(e, index) {
@@ -248,51 +259,71 @@ function reindex(e, index) {
   frames.splice(newIndex, 0, e.target)
   if (index == newIndex) return
 
-  framesContainer.innerHTML = ''
-  frames.forEach(setFrameProps)
-  changeFrame(newIndex)
   log(`frameMove ${index} ${newIndex}`)
+  drawFrames(newIndex)
 }
 
 async function changeFrame(index) {
-  if (frame) await save
-
   stopDrawing = true
   frame = action.frames[index]
-  ctx.clearRect(0, 0, frame.width, frame.height)
-  ctx.drawImage(frame, 0, 0)
-  ctx.beginPath()
   framePicker.innerText = `Frame ${index + 1} of ${action.frames.length}`
   action.frames.forEach(f => f.className = f === frame ? 'selected' : '')
   stopDrawing = false
+  ctx.beginPath()
+  offscreen.width = template.w
+  offscreen.height = template.h
+  pen.beginPath()
+  pen.drawImage(frame, 0, 0)
+  draw()
+  frameIndex = index
+  log(`frame ${index}`)
+}
+
+function setFrame() {
+  const img = new Image()
+  const promise = new Promise(resolve => {
+    img.onload = _ => {
+      drawFrames(frameIndex)
+      resolve()
+    }
+  })
+  action.frames[frameIndex] = img
+  img.src = offscreen.toDataURL()
+  return promise
 }
 
 async function save() {
-  return
+  draw()
   await setFrame()
 
-  const offscreen = document.createElement('canvas')
-  offscreen.width = frames.length * size
-  offscreen.height = size
-  const ctx = offscreen.getContext('2d')
+  const w = sprite.actions.reduce((a, b) => Math.max(a, b.frames.length), 0)
+  const h = sprite.actions.length
+  offscreen.width = w * template.w
+  offscreen.height = h * template.h
 
-  frames.forEach( (image, index) => {
-    ctx.drawImage(image, size * index, 0)
-  })
+  for (let y = 0; y < h; y++) {
+    const action = sprite.actions[y]
+    for (let x = 0; x < w; x++) {
+      if (action.frames[x]) {
+        pen.drawImage(actions.frame[x], template.w * x, template.h * y)
+      }
+    }
+  }
 
-  const id = ctx.getImageData(0, 0, offscreen.width, offscreen.height)
+  const id = pen.getImageData(0, 0, offscreen.width, offscreen.height)
   for (let i = 0; i < id.data.length; i += 4) {
     if (id.data[i] == 255 && id.data[i + 1] == 255 && id.data[i + 2] == 255) {
       id.data[i + 3] = 0
     }
   }
-  ctx.putImageData(id, 0, 0)
+  pen.putImageData(id, 0, 0)
 
   const image = offscreen.toDataURL()
-  const name = select[select.selectedIndex].value
+  const name = sprite.name
   const body = JSON.stringify({ image, name })
 
   fetch('save', { method, headers, body }).then(resp => resp.json().then(body => setError(body, 'Saved')))
+  changeFrame(frameIndex)
 }
 
 function showGames() {
@@ -373,26 +404,28 @@ showPage()
 const commands = { init, dot, setColor, select }
 
 function init() {
-  const {w, h, color} = frame
-
-  canvas.width = w * scale
-  canvas.height = h * scale
-  ctx.imageSmoothingEnabled = false
-  ctx.scale(scale, scale)
-
-  offscreen.width = w
-  offscreen.height = h
-  setColor(color)
+  // const {w, h, color} = frame
+  //
+  // canvas.width = w * scale
+  // canvas.height = h * scale
+  // ctx.imageSmoothingEnabled = false
+  // ctx.scale(scale, scale)
+  //
+  // offscreen.width = w
+  // offscreen.height = h
+  // setColor(color)
 }
 
 function dot(x, y) {
   log(`dot ${x} ${y}`)
   ctx.rect(x, y, 1, 1)
+  pen.rect(x, y, 1, 1)
 }
 
 function setColor(color) {
-  log(`setColor ${color}`)
+  log(`color ${color}`)
   ctx.fillStyle = color
+  pen.fillStyle = color
   palette.style.color = color
 }
 
@@ -408,6 +441,8 @@ function step(command, fields) {
 }
 
 function log(message) {
+  if (message == lastLogMsg) return
+  lastLogMsg = message
   console.log(message)
 }
 
@@ -419,6 +454,12 @@ async function newFrame() {
   frame.src = offscreen.toDataURL()
   changeFrame(frameIndex)
   log('newFrame')
+}
+
+function openColorPicker() {
+  const input = document.querySelector('input[type=color]')
+  input.focus()
+  input.click()
 }
 
 // const example=`

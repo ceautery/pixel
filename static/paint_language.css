@@ -86,3 +86,7 @@ canvas { border: solid; margin-right: 1em; }
 .newSprite {
   color: blue;
 }
+
+input[type=color] {
+  display: none;
+}

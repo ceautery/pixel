@@ -5,6 +5,7 @@
     <link rel="stylesheet" href="paint_language.css">
   </head>
   <body>
+    <input type="color" onchange="setColor(this.value)">
     <div id="changer">
       <div id="gameList"></div>
       <div id="templateList"></div>
@@ -40,7 +41,7 @@
         </section>
         <div id="toolbar">
           <i class="fas fa-pen active"></i>
-          <i id="palette" class="fas fa-palette grey"></i>
+          <i id="palette" class="fas fa-palette grey" onclick="openColorPicker()"></i>
           <i class="fas fa-mouse-pointer grey"></i>
           <i class="fas fa-copy grey"></i>
           <i class="fas fa-cut grey"></i>
