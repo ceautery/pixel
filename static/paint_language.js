@@ -215,19 +215,21 @@ async function loadLog(name) {
   // const resp = await fetch(`sprites/${name}.log`)
 }
 
+function setFrameProps(img, index) {
+  framesContainer.append(img)
+  img.onclick = () => changeFrame(index)
+  img.ondragstart = img.onclick
+  img.ondragend = e => reindex(e, index)
+  img.style.width = (template.w * 4) + 'px'
+}
+
 function changeAction(name) {
   stopDrawing = true
   log(`changeAction ${name}`)
   const index = template.actions.findIndex(a => a == name)
   action = sprite.actions[index]
   framesContainer.innerHTML = ''
-  action.frames.forEach((img, index) => {
-    framesContainer.append(img)
-    img.onclick = () => changeFrame(index)
-    img.ondragstart = img.onclick
-    img.ondragend = e => reindex(e, index)
-    img.style.width = (template.w * 4) + 'px'
-  })
+  action.frames.forEach(setFrameProps)
 
   canvas.width = template.w * scale
   canvas.height = template.h * scale
@@ -247,12 +249,7 @@ function reindex(e, index) {
   if (index == newIndex) return
 
   framesContainer.innerHTML = ''
-  frames.forEach((img, index) => {
-    framesContainer.append(img)
-    img.onclick = () => changeFrame(index)
-    img.ondragstart = img.onclick
-    img.ondragend = e => reindex(e, index)
-  })
+  frames.forEach(setFrameProps)
   changeFrame(newIndex)
   log(`frameMove ${index} ${newIndex}`)
 }
@@ -412,6 +409,16 @@ function step(command, fields) {
 
 function log(message) {
   console.log(message)
+}
+
+async function newFrame() {
+  const frameIndex = action.frames.length
+  frame = new Image()
+  action.frames.push(frame)
+  setFrameProps(frame, frameIndex)
+  frame.src = offscreen.toDataURL()
+  changeFrame(frameIndex)
+  log('newFrame')
 }
 
 // const example=`
