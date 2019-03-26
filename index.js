@@ -49,9 +49,17 @@ app.post('/pixel/save', (req, res) => {
     res.end()
   }
 
-  const filename = path.join(dir, req.body.name)
+  const filename = path.join(dir, req.body.name + '.png')
   const image = req.body.image.substr(22)
-  fs.writeFile(filename, image, 'base64', error => res.json({success: !error}))
+  fs.writeFile(filename, image, 'base64', error => {
+    res.json({success: !error})
+    if (error) return
+
+    const template = getUser(req).activeTemplate
+    const symlinkName = path.join(dir, template)
+    if(fs.existsSync(symlinkName)) fs.unlinkSync(symlinkName)
+    fs.symlinkSync(filename, symlinkName)
+  })
 })
 
 app.post('/pixel/rename', (req, res) => {
@@ -74,7 +82,7 @@ app.get('/pixel/list', (req, res) => {
     return
   }
 
-  const list = fs.readdirSync(dir).map(name => name.replace(/\.png$/, ''))
+  const list = fs.readdirSync(dir).filter(name => /\.png$/.test(name)).map(name => name.replace(/\.png$/, ''))
   res.json(list)
 })
 
@@ -170,15 +178,24 @@ function getSpriteDir(req) {
   }
 }
 
+function getBaseSpriteDir(req) {
+  const user = getUser(req)
+  if (user) {
+    return path.join(user.spriteDir, user.activeGame)
+  }
+}
+
 app.get('/pixel/sprites/*', (req, res) => {
-  const dir = getSpriteDir(req)
+  const fromPixel = /\.png$/.test(req.url)
+  const dir = fromPixel ? getSpriteDir(req) : getBaseSpriteDir(req)
   if (!dir) {
     res.writeHead(404)
     res.end()
   }
 
   const file = req.url.replace(/.+\//, '')
-  const stream = fs.createReadStream(path.join(dir, file))
+  const filePath = fromPixel ? path.join(dir, file) : path.join(dir, file, file)
+  const stream = fs.createReadStream(filePath)
   stream.on('error', function() {
     res.writeHead(404)
     res.end()

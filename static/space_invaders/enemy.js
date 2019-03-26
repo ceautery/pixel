@@ -12,9 +12,9 @@ const Template = [
   {name: 'enemy3', size, actions}
 ]
 
-const frames = []
+const frames = [[], [], []]
 
-function loadTemplate() {
+function loadTemplate(url, arr) {
   const canvas = document.createElement('canvas')
   const pen = canvas.getContext('2d')
   const img = new Image()
@@ -27,13 +27,15 @@ function loadTemplate() {
       pen.drawImage(img, -i * size.x, 0)
       const image = new Image()
       image.src = canvas.toDataURL()
-      frames.push(image)
+      arr.push(image)
     }
   }
-  img.src = "/pixel/sprites/enemy"
+  img.src = url
 }
 
-loadTemplate()
+loadTemplate("/pixel/sprites/enemy/enemy", frames[0])
+loadTemplate("/pixel/sprites/enemy2/enemy2", frames[1])
+loadTemplate("/pixel/sprites/enemy3/enemy3", frames[2])
 
 class Enemy {
   constructor(options) {
@@ -48,15 +50,15 @@ class Enemy {
   }
 
   draw(pen) {
-    if (frames.length) {
-      pen.drawImage(frames[this.frame], this.x, this.y)
+    if (frames[this.type].length) {
+      pen.drawImage(frames[this.type][this.frame], this.x, this.y)
     }
     else pen.fillRect(this.x, this.y, size.x, size.y)
   }
 
   move() {
     this.frame++
-    if (this.frame >= frames.length) this.frame = 0
+    if (this.frame >= frames[this.type].length) this.frame = 0
 
     if (this.movedDown) {
       this.movedDown = false

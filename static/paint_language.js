@@ -21,6 +21,9 @@ canvas.addEventListener('mousedown', addPoint)
 canvas.addEventListener('mouseout', save)
 let stopDrawing = true
 
+const headers = { 'Content-Type': 'application/json; charset=utf-8' }
+const method = 'POST'
+
 function draw() {
   if (stopDrawing) return
 
@@ -82,6 +85,7 @@ async function changeGame(g, t) {
     templateList.append(div)
   })
   changeTemplate(t || game.templates[0])
+  play.href = game.name
 }
 
 async function changeTemplate(t) {
@@ -105,6 +109,19 @@ async function changeTemplate(t) {
   sprites.forEach(addSpriteNameToList)
   sprite = { name: null }
   changeSprite(sprites.length ? sprites[0] : 'new')
+
+  if (template.actions.length > 1) {
+    actionContainer.style.display = 'block'
+    actionList.innerHTML = ''
+    template.actions.forEach(name => {
+      const div = document.createElement('div')
+      div.append(new Text(name))
+      div.onclick = () => changeAction(name)
+      actionList.append(div)
+    })
+  } else {
+    actionContainer.style.display = 'none'
+  }
 }
 
 function addSpriteNameToList(name) {
@@ -199,7 +216,7 @@ async function changeSprite(name) {
       for (let x = 0; x < w; x++) {
         const id = ctx.getImageData(x * template.w, y * template.h, template.w, template.h)
         const view = new Uint32Array(id.data.buffer)
-        if (view.map(e => (e >> 24) & 255).some(e => e)) {
+        if (x == 0 || view.map(e => (e >> 24) & 255).some(e => e)) {
           pen.putImageData(id, 0, 0)
           const img = new Image()
           promises.push(new Promise(resolve => { img.onload = resolve }))
@@ -208,8 +225,8 @@ async function changeSprite(name) {
         }
       }
     }
+
     Promise.all(promises).then( () => {
-      console.log('promises')
       changeAction(template.actions[0])
     })
   }
@@ -237,6 +254,9 @@ function drawFrames(index) {
 }
 
 function changeAction(name) {
+  changer.style.display = 'none'
+  actionList.style.display = 'none'
+  actionContainer.innerText = name
   stopDrawing = true
   log(`action ${name}`)
   const index = template.actions.findIndex(a => a == name)
@@ -294,6 +314,8 @@ function setFrame() {
 
 async function save() {
   draw()
+  if (!action || !sprite || !sprite.actions) return
+
   await setFrame()
 
   const w = sprite.actions.reduce((a, b) => Math.max(a, b.frames.length), 0)
@@ -303,9 +325,11 @@ async function save() {
 
   for (let y = 0; y < h; y++) {
     const action = sprite.actions[y]
+    if (!action.frames) continue
+
     for (let x = 0; x < w; x++) {
       if (action.frames[x]) {
-        pen.drawImage(actions.frame[x], template.w * x, template.h * y)
+        pen.drawImage(action.frames[x], template.w * x, template.h * y)
       }
     }
   }
@@ -322,7 +346,7 @@ async function save() {
   const name = sprite.name
   const body = JSON.stringify({ image, name })
 
-  fetch('save', { method, headers, body }).then(resp => resp.json().then(body => setError(body, 'Saved')))
+  fetch('save', { method, headers, body }).then(resp => resp.json().then())
   changeFrame(frameIndex)
 }
 
@@ -343,6 +367,12 @@ function showSprites() {
     changer.style.display = 'block'
     spriteList.style.display = 'block'
   }
+}
+
+function showActions() {
+  if (!sprite.name) return
+  changer.style.display = 'block'
+  actionList.style.display = 'block'
 }
 
 async function showPage(resp) {
@@ -419,6 +449,7 @@ function init() {
 function dot(x, y) {
   log(`dot ${x} ${y}`)
   ctx.rect(x, y, 1, 1)
+  pen.fillStyle = ctx.fillStyle
   pen.rect(x, y, 1, 1)
 }
 
