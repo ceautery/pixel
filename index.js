@@ -14,7 +14,7 @@ const wss = new WebSocket.Server({ port: 8080 })
 const baseSriteDir = path.join(__dirname, 'sprites')
 const users = {}
 
-const loginHack = true
+const loginHack = false
 const games = [
   {
     name: 'space_invaders',
