@@ -44,6 +44,26 @@ x     o o o o o o o x
 x                   x
 x @                 x
 xxxxxxxxxxxxxxxxxxxxx
+`,`
+                   v 
+x=                  x
+x|                  x
+x       o o o o   o x
+x      o o   o o o  x
+x       o o o o o o x
+x                   x
+x   @  @  @   @     x
+xxxxxxxxxxxxxxxxxxxxx
+`,`
+         v   v     v 
+x=  v   v   v     v x
+x|                  x
+x             o   o x
+x      o o   o   o  x
+x           o o o o x
+x                   x
+x             @     x
+xxxxxxxxxxxxxxxxxxxxx
 `],
 step = 5/300,
 scale = 50,
