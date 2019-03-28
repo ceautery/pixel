@@ -29,7 +29,7 @@ class Player {
 
   draw(pen) {
     if (frames.length) {
-      pen.drawImage(frames[0], this.x, this.y)
+      pen.drawImage(frames[0], this.x - 5, this.y)
     }
     else {
       pen.moveTo(this.x + 10, this.y)

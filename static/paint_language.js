@@ -19,6 +19,14 @@ const ctx = canvas.getContext('2d')
 canvas.addEventListener('mousemove', addPoint)
 canvas.addEventListener('mousedown', addPoint)
 canvas.addEventListener('mouseout', save)
+addEventListener('keydown', processKey)
+
+function processKey(e) {
+  if (['Delete', 'Backspace'].includes(e.key)) {
+    deleteActiveFrame()
+  }
+}
+
 let stopDrawing = true
 
 const headers = { 'Content-Type': 'application/json; charset=utf-8' }
@@ -253,6 +261,15 @@ function drawFrames(index) {
   changeFrame(index)
 }
 
+function deleteActiveFrame() {
+  if (action.frames.length <= 1) return
+  log(`deleteFrame ${frameIndex}`)
+
+  action.frames.splice(frameIndex, 1)
+  drawFrames(0)
+  save()
+}
+
 function changeAction(name) {
   changer.style.display = 'none'
   actionList.style.display = 'none'
@@ -408,6 +425,7 @@ async function showPage(resp) {
     // }
     page.style.display = 'block'
   }
+
 }
 
 function onSignIn(googleUser) {
@@ -491,6 +509,36 @@ function openColorPicker() {
   const input = document.querySelector('input[type=color]')
   input.focus()
   input.click()
+}
+
+function getRGB(h, s, v) {
+  const max = Math.round(v * 255);
+  if( s == 0 ) return ([max, max, max]); // Greys
+
+  // Quadrant is between 0 and 5, where 0, 2, and 4 are red, green, and blue
+  const sixth = h / 60;
+  const quadrant = Math.floor(sixth);
+
+  // fraction is distance away from quadrant representing hue's primary color
+  const fraction = (quadrant % 2 == 0) ? (1 - sixth % 1) : sixth % 1;
+
+  // min and mid are the smaller two RGB colors in the final return array
+  // We don't know what primary colors they represent...
+  const min = Math.round(max * ( 1 - s ));
+  const mid = Math.round(max * ( 1 - s * fraction ));
+
+  // ...until we check what quadrant we're in
+  switch (quadrant) {
+    // reds
+    case 5: return [max, min, mid];
+    case 0: return [max, mid, min];
+    // greens
+    case 1: return [mid, max, min];
+    case 2: return [min, max, mid];
+    // blues
+    case 3: return [min, mid, max];
+    case 4: return [mid, min, max];
+  }
 }
 
 // const example=`
