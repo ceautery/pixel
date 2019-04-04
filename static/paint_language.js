@@ -208,7 +208,6 @@ async function changeSprite(name) {
   }
 
   sprite.image.onload = () => {
-    console.log('load')
     const w = sprite.image.width / template.w
     canvas.width = sprite.image.width
     canvas.height = sprite.image.height

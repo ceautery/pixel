@@ -27,7 +27,7 @@ const games = [
   },{
     name: 'dark_blue',
     templates: [
-      { name: 'player', w: 15, h: 15, actions: ['move', 'jump'] },
+      { name: 'player', w: 15, h: 15, actions: ['move', 'jump', 'stand'] },
       { name: 'coin', w: 15, h: 15 },
       { name: 'lava', w: 15, h: 15 },
     ]
@@ -185,7 +185,14 @@ function getBaseSpriteDir(req) {
   }
 }
 
-app.get('/pixel/sprites/*', (req, res) => {
+function noCache(req, res, next) {
+  res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate')
+  res.header('Expires', '-1')
+  res.header('Pragma', 'no-cache')
+  next()
+}
+
+app.get('/pixel/sprites/*', noCache, (req, res) => {
   const fromPixel = /\.png$/.test(req.url)
   const dir = fromPixel ? getSpriteDir(req) : getBaseSpriteDir(req)
   if (!dir) {

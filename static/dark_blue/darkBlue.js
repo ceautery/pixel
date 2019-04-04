@@ -78,12 +78,14 @@ level;
 
 const frames = {
   lava: [],
-  coin: []
+  coin: [],
+  player: { move: [], jump: [], stand: [] }
 }
 
 const sizes = {
   coin: {x: 15, y: 15},
   lava: {x: 15, y: 15},
+  player: {x: 15, y: 15}
 }
 
 function loadTemplates() {
@@ -121,9 +123,36 @@ function loadTemplates() {
     }
   }
   lava.src = "/pixel/sprites/lava"
+
+  const player = new Image()
+  player.onload = () => {
+    const size = sizes.player
+    canvas.width = size.x
+    canvas.height = size.y
+    const frameCount = player.width / size.x
+    Object.values(frames.player).forEach((action, y) => {
+      for (let x = 0; x < frameCount; x++) {
+        pen.clearRect(0, 0, canvas.width, canvas.height)
+        pen.drawImage(player, -x * size.x, -y * size.y)
+        const imageData = pen.getImageData(0, 0, canvas.width, canvas.height)
+        if (x == 0 || hasData(imageData)) {
+          const image = new Image()
+          image.src = canvas.toDataURL()
+          action.push(image)
+        }
+      }
+    })
+  }
+  player.src = "/pixel/sprites/player"
 }
 
 loadTemplates()
+
+function hasData(imageData) {
+  const view = new Uint32Array(imageData.data.buffer)
+  return view.map(e => (e >> 24) & 255).some(e => e)
+}
+
 function GameObject(name, pos, size) {
   this.name = name;
   this.size = size;
@@ -257,18 +286,56 @@ LavaRepeating.prototype = new LavaHorizontal;
 
 function Player(pos) {
   pos = pos.plus(new Vector(0, -0.5));
-  GameObject.call(this, 'player', pos, new Vector(0.8, 1.5));
+  GameObject.call(this, 'player', pos, new Vector(1, 1));
   this.moves = true;
   this.obstacle = false;
+  this.action = 'stand'
+  this.reversed = false
+  this.frameNum = 0
+  this.step = 0
 }
+
 Player.prototype = new GameObject;
 
 Player.prototype.draw = function(pen) {
-  pen.fillStyle = 'black';
-  pen.fillRect(0, 0, this.size.x, this.size.y);
+  if (frames.player.move.length) {
+
+    const oldAction = this.action
+    if (pressed.up) {
+      this.action = 'jump'
+    } else if (pressed.left) {
+      this.action = 'move'
+      this.reversed = true
+    } else if (pressed.right) {
+      this.action = 'move'
+      this.reversed = false
+    } else {
+      this.action = 'stand'
+    }
+    if (this.action != oldAction) this.frameNum = 0
+
+    pen.save()
+    if (this.reversed) {
+      pen.translate(this.size.x, 0)
+      pen.scale(-1, 1)
+    }
+    pen.scale(1/15, 1/15)
+    pen.drawImage(frames.player[this.action][this.frameNum], 0, 0)
+    pen.restore()
+  } else {
+    pen.fillStyle = 'black';
+    pen.fillRect(0, 0, this.size.x, this.size.y);
+  }
 };
 
 Player.prototype.act = function() {
+  this.step++
+  if (this.step == 20) {
+    this.step = 0
+    this.frameNum++
+    if (this.frameNum >= frames.player[this.action].length) this.frameNum = 0
+  }
+
   var collisions = moveX(this).concat(moveY(this));
   collisions.filter(o => o.affectsPlayer).forEach(a => playerTouched(a.name, a));
 
