@@ -288,6 +288,17 @@ function LavaHorizontal(pos) {
 }
 LavaHorizontal.prototype = new Lava;
 
+LavaHorizontal.prototype.draw = function(pen) {
+  if (frames.lava2.length) {
+    pen.save()
+    pen.scale(1/15, 1/15)
+    pen.drawImage(frames.lava2[this.frameNum], 0, 0)
+    pen.restore()
+  } else {
+    pen.fillStyle = 'rgb(255, 100, 100)';
+    pen.fillRect(0, 0, this.size.x, this.size.y);
+  }
+}
 function LavaVertical(pos) {
   LavaHorizontal.call(this, pos);
   this.vector = new Vector(0, 2);
@@ -347,7 +358,7 @@ Player.prototype.draw = function(pen) {
 
 Player.prototype.act = function() {
   this.step++
-  if (this.step == 20) {
+  if (this.step == 8) {
     this.step = 0
     this.frameNum++
     if (this.frameNum >= frames.player[this.action].length) this.frameNum = 0
