@@ -1,8 +1,24 @@
 <style>
   canvas { border: solid; }
+  #editor { display: none; }
+  body { font-size: 2em; font-family: monospace;}
+  textarea { font-size: 1.25em; font-family: monospace;}
 </style>
 
 <script src="darkBlue.js"></script>
 <body onload="init()">
   <canvas id="cnv"></canvas>
+  <button onclick="editLevel()">Edit</button>
+  <div id="editor">
+    <pre>x: Wall
+o: Coin
+@: Player
+!: Lava
+=: Horizontal bouncing lava (lava2)
+|: Vertical bouncing lava
+v: Dripping lava</pre>
+
+    <textarea cols=29 rows=13 id="textarea"></textarea>
+    <button onclick="play()">Play level</button>
+  </div>
 </body>

@@ -30,6 +30,7 @@ const games = [
       { name: 'player', w: 15, h: 15, actions: ['move', 'jump', 'stand'] },
       { name: 'coin', w: 15, h: 15 },
       { name: 'lava', w: 15, h: 15 },
+      { name: 'lava2', w: 15, h: 15 }
     ]
   }
 ]

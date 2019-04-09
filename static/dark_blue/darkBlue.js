@@ -79,7 +79,8 @@ level;
 const frames = {
   lava: [],
   coin: [],
-  player: { move: [], jump: [], stand: [] }
+  player: { move: [], jump: [], stand: [] },
+  lava2: []
 }
 
 const sizes = {
@@ -121,6 +122,22 @@ function loadTemplates() {
       image.src = canvas.toDataURL()
       frames.lava.push(image)
     }
+    frames.lava2 = frames.lava.slice()
+    const lava2 = new Image()
+    lava2.onload = () => {
+      const size = sizes.lava
+      canvas.width = size.x
+      canvas.height = size.y
+      const frameCount = lava.width / size.x
+      for (let i = 0; i < frameCount; i++) {
+        pen.clearRect(0, 0, canvas.width, canvas.height)
+        pen.drawImage(lava2, -i * size.x, 0)
+        const image = new Image()
+        image.src = canvas.toDataURL()
+        frames.lava2.push(image)
+      }
+    }
+    lava2.src = "/pixel/sprites/lava2"
   }
   lava.src = "/pixel/sprites/lava"
 
@@ -456,13 +473,16 @@ function finish(status) {
   setTimeout( _ => level.finished = true, 1000)
 }
 
-function runLevel(n) {
-  var parsed = levels[n].split('\n').filter(e => e);
+let currentLevel = 0
+function runLevel() {
+  var parsed = levels[currentLevel].split('\n').filter(e => e);
   level = new Level(parsed);
   cnv.width = level.width * scale;
   cnv.height = level.height * scale;
 
   function frame() {
+    if (editing) return
+
     level.gameObjects.filter(o => o.moves).forEach(a => a.act());
     drawFrame();
     if (!level.finished) {
@@ -470,9 +490,10 @@ function runLevel(n) {
       return
     }
 
-    if (level.status == "lost") runLevel(n);
-    else if (n < levels.length - 1) {
-      runLevel(n + 1)
+    if (level.status == "lost") runLevel();
+    else if (currentLevel < levels.length - 1) {
+      currentLevel++
+      runLevel()
     } else {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.fillStyle = 'white';
@@ -487,5 +508,21 @@ function runLevel(n) {
 
 function init() {
   ctx = cnv.getContext('2d');
-  runLevel(0)
+  runLevel()
+}
+
+let editing = false
+function editLevel() {
+  textarea.value = levels[currentLevel]
+  editor.style.display = 'block'
+  cnv.style.display = 'none'
+  editing = true
+}
+
+function play() {
+  cnv.style.display = 'inline'
+  editor.style.display = 'none'
+  levels[currentLevel] = textarea.value
+  editing = false
+  runLevel()
 }
