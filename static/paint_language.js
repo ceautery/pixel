@@ -10,16 +10,57 @@ let frame
 let frameIndex
 let lastLogMsg
 
+const selection = {x: 0, y: 0, w: 0, h: 0, selecting: false}
 const scale = 20
 const offscreen = document.createElement('canvas')
 const pen = offscreen.getContext('2d')
 const ctx = canvas.getContext('2d')
 // let ws
 
-canvas.addEventListener('mousemove', addPoint)
-canvas.addEventListener('mousedown', addPoint)
+const classes = {
+  draw: 'fa-pen',
+  select: 'fa-mouse-pointer',
+  copy: 'fa-copy',
+  paste: 'fa-paste',
+  palette: 'fa-palette'
+}
+
+let clipboard
+
+let mode = 'draw';
+['mousemove', 'mousedown', 'mouseup'].forEach(action => canvas.addEventListener(action, handleMouse))
 canvas.addEventListener('mouseout', save)
 addEventListener('keydown', processKey)
+
+function setMode(m) {
+  if (mode == m) return
+  mode = m
+  const activeTool = document.querySelector('#toolbar .active')
+  const newTool = document.querySelector(`#toolbar .${classes[mode]}`)
+  activeTool.classList.remove('active')
+  newTool.classList.add('active')
+
+  if (mode == 'select') selection.selecting = false
+}
+
+function copySelection() {
+  clipboard = pen.getImageData(selection.x, selection.y, selection.w, selection.h)
+  resetSelection()
+  flashTool('copy')
+}
+
+function pasteSelection() {
+  pen.putImageData(clipboard, 0, 0)
+  setFrame()
+  save()
+  flashTool('paste')
+}
+
+function flashTool(m) {
+  const oldMode = mode
+  setMode(m)
+  setTimeout(() => setMode(oldMode), 200)
+}
 
 function processKey(e) {
   if (['Delete', 'Backspace'].includes(e.key)) {
@@ -41,6 +82,11 @@ function draw() {
   pen.fill()
 }
 
+function handleMouse(e) {
+  if (mode == 'draw') addPoint(e)
+  else if (mode == 'select') setSelection(e)
+}
+
 function addPoint(e) {
   if (stopDrawing) return
 
@@ -53,6 +99,35 @@ function addPoint(e) {
     draw()
     ctx.fillRect(x, y, 1, 1)
   }
+}
+
+function setSelection(e) {
+  const x = toScale(e.offsetX)
+  const y = toScale(e.offsetY)
+  if (e.type == 'mousedown') {
+    selection.x = x
+    selection.y = y
+    selection.w = 0
+    selection.h = 0
+    selection.selecting = true
+  } else if (e.type == 'mouseup') {
+    selection.selecting = false
+  } else if (selection.selecting) {
+    selection.w = x - selection.x
+    selection.h = y - selection.y
+  }
+
+  draw()
+  drawSelection()
+}
+
+function drawSelection() {
+  if (selection.w >= template.w && selection.h >= template.h) return
+
+  ctx.save()
+  ctx.fillStyle = '#cccccc66'
+  ctx.fillRect(selection.x, selection.y, selection.w, selection.h)
+  ctx.restore()
 }
 
 function toScale(num) {
@@ -92,6 +167,7 @@ async function changeGame(g, t) {
     div.onclick = () => changeTemplate(t)
     templateList.append(div)
   })
+  template = null
   changeTemplate(t || game.templates[0])
   play.href = game.name
 }
@@ -187,10 +263,6 @@ async function changeSprite(name) {
     console.log('Same sprite chosen')
     return
   }
-  if (name == sprite.name) {
-    console.log('Same sprite chosen')
-    return
-  }
 
   stopDrawing = true
 
@@ -199,6 +271,7 @@ async function changeSprite(name) {
 
   if (name == 'new') return
 
+  resetSelection()
   sprite = {
     name,
     image: new Image(),
@@ -299,6 +372,14 @@ function reindex(e, index) {
   drawFrames(newIndex)
 }
 
+function resetSelection() {
+  selection.x = 0
+  selection.y = 0
+  selection.w = template.w
+  selection.h = template.h
+  selection.selecting = false
+}
+
 async function changeFrame(index) {
   stopDrawing = true
   frame = action.frames[index]
@@ -308,11 +389,13 @@ async function changeFrame(index) {
   ctx.beginPath()
   offscreen.width = template.w
   offscreen.height = template.h
+  if (index != frameIndex) resetSelection()
   pen.beginPath()
   pen.drawImage(frame, 0, 0)
   draw()
   frameIndex = index
   log(`frame ${index}`)
+  drawSelection()
 }
 
 function setFrame() {
@@ -503,6 +586,7 @@ async function newFrame() {
 }
 
 function openColorPicker() {
+  flashTool('palette')
   const input = document.querySelector('input[type=color]')
   input.focus()
   input.click()
@@ -526,13 +610,13 @@ function getRGB(h, s, v) {
 
   // ...until we check what quadrant we're in
   switch (quadrant) {
-    // reds
+      // reds
     case 5: return [max, min, mid];
     case 0: return [max, mid, min];
-    // greens
+      // greens
     case 1: return [mid, max, min];
     case 2: return [min, max, mid];
-    // blues
+      // blues
     case 3: return [min, mid, max];
     case 4: return [mid, min, max];
   }
