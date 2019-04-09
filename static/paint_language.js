@@ -446,8 +446,6 @@ function localSignIn() {
   }).then(r => r.json().then(showPage))
 }
 
-showPage()
-
 const commands = { init, dot, setColor, select }
 
 function init() {

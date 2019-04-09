@@ -94,7 +94,7 @@ function setUser(email, id) {
   const spriteDir = path.join(baseSriteDir, email)
   const activeGame = 'space_invaders'
   const activeTemplate = 'enemy'
-  users[id] = {spriteDir, activeGame, activeTemplate}
+  users[id] = {spriteDir, activeGame, activeTemplate, email}
 
   if(!fs.existsSync(spriteDir)) fs.mkdirSync(spriteDir)
   games.forEach(game => {
@@ -123,6 +123,12 @@ app.post('/pixel/set_user', (req, res) => {
     .then(resp => resp.json().then(json => {
       const {name, sub, aud, email} = json
       if (aud === CLIENT_ID) {
+        const currentUser = getUser(req)
+        if (currentUser && currentUser.email == email) {
+          res.json({ok: true, user: currentUser})
+          return
+        }
+
         const id = `${sub}.${+new Date()}`
         const user = setUser(email, id)
         res.cookie('pixel_id', id)
