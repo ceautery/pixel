@@ -126,8 +126,8 @@ function setSelection(e) {
 function getColor(e) {
   if (!e.buttons) return
 
-  const x = toScale(e.offsetX)
-  const y = toScale(e.offsetY)
+  const x = e.offsetX
+  const y = e.offsetY
   const id = ctx.getImageData(x, y, 1, 1)
   const color = '#' + id.data.map(n => n.toString(16)).join('')
   setColor(color)
