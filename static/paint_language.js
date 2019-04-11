@@ -129,7 +129,7 @@ function getColor(e) {
   const x = e.offsetX
   const y = e.offsetY
   const id = ctx.getImageData(x, y, 1, 1)
-  const color = '#' + id.data.map(n => ('0' + n.toString(16)).slice(-2)).join('')
+  const color = '#' + Array.from(id.data).map(n => ('00' + n.toString(16)).slice(-2)).join('')
   setColor(color)
   setMode('draw')
 }
