@@ -50,7 +50,7 @@ app.post('/pixel/save', (req, res) => {
     res.end()
   }
 
-  const filename = path.join(dir, req.body.name + '.png')
+  const filename = path.join(dir, req.body.name.replace(/\W/g, '_') + '.png')
   const image = req.body.image.substr(22)
   fs.writeFile(filename, image, 'base64', error => {
     res.json({success: !error})
@@ -71,7 +71,7 @@ app.post('/pixel/rename', (req, res) => {
   }
 
   const filename = path.join(dir, req.body.name)
-  const newName = path.join(dir, req.body.newName)
+  const newName = path.join(dir, req.body.newName.replace(/\W/g, '_'))
   fs.rename(filename, newName, error => res.json({success: !error}))
 })
 
@@ -205,6 +205,7 @@ app.get('/pixel/sprites/*', noCache, (req, res) => {
   if (!dir) {
     res.writeHead(404)
     res.end()
+    return
   }
 
   const file = req.url.replace(/.+\//, '')

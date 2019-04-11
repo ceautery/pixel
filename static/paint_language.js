@@ -222,7 +222,7 @@ function addSprite() {
 
   let name = prompt("Name for new sprite:")
   if (!name) return
-  name = name.toLowerCase().trim()
+  name = name.toLowerCase().trim().replace(/\W/g, '_')
   if (sprites.includes(name)) {
     alert("Name in use")
     return
@@ -442,7 +442,7 @@ async function save() {
   pen.putImageData(id, 0, 0)
 
   const image = offscreen.toDataURL()
-  const name = sprite.name
+  const name = sprite.name.replace(/\W/g, '_')
   const body = JSON.stringify({ image, name })
 
   fetch('save', { method, headers, body }).then(resp => resp.json().then())
