@@ -22,7 +22,8 @@ const classes = {
   select: 'fa-mouse-pointer',
   copy: 'fa-copy',
   paste: 'fa-paste',
-  palette: 'fa-palette'
+  palette: 'fa-palette',
+  dropper: 'fa-eye-dropper'
 }
 
 let clipboard
@@ -85,6 +86,7 @@ function draw() {
 function handleMouse(e) {
   if (mode == 'draw') addPoint(e)
   else if (mode == 'select') setSelection(e)
+  else if (mode == 'dropper') getColor()
 }
 
 function addPoint(e) {
@@ -119,6 +121,17 @@ function setSelection(e) {
 
   draw()
   drawSelection()
+}
+
+function getColor(e) {
+  if (!e.buttons) return
+
+  const x = toScale(e.offsetX)
+  const y = toScale(e.offsetY)
+  const id = ctx.getImageData(x, y, 1, 1)
+  const color = '#' + id.data.map(n => n.toString(16)).join('')
+  setColor(color)
+  setMode('draw')
 }
 
 function drawSelection() {
