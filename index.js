@@ -58,8 +58,12 @@ app.post('/pixel/save', (req, res) => {
 
     const template = getUser(req).activeTemplate
     const symlinkName = path.join(dir, template)
-    if(fs.existsSync(symlinkName)) fs.unlinkSync(symlinkName)
-    fs.symlinkSync(filename, symlinkName)
+    try {
+      if(fs.existsSync(symlinkName)) fs.unlinkSync(symlinkName)
+      fs.symlinkSync(filename, symlinkName)
+    } catch (e) {
+      console.log(e)
+    }
   })
 })
 
