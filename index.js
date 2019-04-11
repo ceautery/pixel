@@ -13,6 +13,17 @@ const wss = new WebSocket.Server({ port: 8080 })
 
 const baseSriteDir = path.join(__dirname, 'sprites')
 const users = {}
+const userFile = path.join(__dirname, 'users.dat')
+
+function fetchUsers() {
+  const usersFromFile = fs.readFileSync(userFile, 'utf8').split(/\n/).filter(e => e)
+  usersFromFile.forEach(line => {
+    const record = JSON.parse(line)
+    users[record.id] = record.user
+  })
+  console.log(users)
+}
+if(fs.existsSync(userFile)) fetchUsers()
 
 const loginHack = false
 const games = [
@@ -35,7 +46,7 @@ const games = [
   }
 ]
 const gameNames = games.map(g => g.name)
-
+const userFileStream = fs.createWriteStream(userFile, {flags:'a'})
 
 // app.use('/pixel/all', express.static('sprites'), serveIndex('sprites'))
 app.use('/pixel', express.static('static'))
@@ -95,11 +106,17 @@ app.get('/pixel/games', (req, res) => {
   res.json(games)
 })
 
+function writeUser(id, user) {
+  const json = JSON.stringify({id, user}) + "\n"
+  userFileStream.write(json)
+}
+
 function setUser(email, id) {
   const spriteDir = path.join(baseSriteDir, email)
   const activeGame = 'space_invaders'
   const activeTemplate = 'enemy'
   users[id] = {spriteDir, activeGame, activeTemplate, email}
+  writeUser(id, users[id])
 
   if(!fs.existsSync(spriteDir)) fs.mkdirSync(spriteDir)
   games.forEach(game => {
