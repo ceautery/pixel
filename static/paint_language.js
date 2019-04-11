@@ -86,7 +86,7 @@ function draw() {
 function handleMouse(e) {
   if (mode == 'draw') addPoint(e)
   else if (mode == 'select') setSelection(e)
-  else if (mode == 'dropper') getColor()
+  else if (mode == 'dropper') getColor(e)
 }
 
 function addPoint(e) {
