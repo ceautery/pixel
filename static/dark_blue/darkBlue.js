@@ -1,5 +1,21 @@
 // A loving homage to http://www.lessmilk.com/game/dark-blue/
 
+const colors = {
+  '#797979': Wall,
+  '#ff9300': Coin,
+  '#0433ff': Player,
+  '#ff2600': Lava,
+  '#663399': LavaHorizontal,
+  '#ff8ad8': LavaVertical,
+  '#941100': LavaRepeating
+}
+
+function getColor(id, offset) {
+  const arr = Array.from(id.data).slice(offset, offset + 3)
+  console.log(arr)
+  return '#' + arr.map(c => ('00' + c.toString(16)).slice(-2)).join('')
+}
+
 var definitions = {
   x: Wall,
   o: Coin,
@@ -79,13 +95,31 @@ level;
 const frames = {
   lava: [],
   coin: [],
-  player: { move: [], jump: [], stand: [] },
+  player: { move: [], jump: [], stand: [], dying: [] },
+  levels: []
 }
 
 const sizes = {
   coin: {x: 15, y: 15},
   lava: {x: 15, y: 15},
-  player: {x: 15, y: 15}
+  player: {x: 15, y: 15},
+  levels: {x: 29, y: 13}
+}
+
+function getFrames(pen, image, size, frameSet, offset = 0) {
+  pen.canvas.width = size.x
+  pen.canvas.height = size.y
+  const frameCount = image.width / size.x
+  for (let i = 0; i < frameCount; i++) {
+    pen.clearRect(0, 0, size.x, size.y)
+    pen.drawImage(image, -i * size.x, -offset * size.y)
+    const imageData = pen.getImageData(0, 0, size.x, size.y)
+    if (i == 0 || hasData(imageData)) {
+      const frame = new Image()
+      frame.src = pen.canvas.toDataURL()
+      frameSet.push(frame)
+    }
+  }
 }
 
 function loadTemplates() {
@@ -93,57 +127,26 @@ function loadTemplates() {
   const pen = canvas.getContext('2d')
 
   const coin = new Image()
-  coin.onload = () => {
-    const size = sizes.coin
-    canvas.width = size.x
-    canvas.height = size.y
-    const frameCount = coin.width / size.x
-    for (let i = 0; i < frameCount; i++) {
-      pen.clearRect(0, 0, canvas.width, canvas.height)
-      pen.drawImage(coin, -i * size.x, 0)
-      const image = new Image()
-      image.src = canvas.toDataURL()
-      frames.coin.push(image)
-    }
-  }
+  coin.onload = () => getFrames(pen, coin, sizes.coin, frames.coin)
   coin.src = "/pixel/sprites/coin"
 
   const lava = new Image()
-  lava.onload = () => {
-    const size = sizes.lava
-    canvas.width = size.x
-    canvas.height = size.y
-    const frameCount = lava.width / size.x
-    for (let i = 0; i < frameCount; i++) {
-      pen.clearRect(0, 0, canvas.width, canvas.height)
-      pen.drawImage(lava, -i * size.x, 0)
-      const image = new Image()
-      image.src = canvas.toDataURL()
-      frames.lava.push(image)
-    }
-  }
+  lava.onload = () => getFrames(pen, lava, sizes.lava, frames.lava)
   lava.src = "/pixel/sprites/lava"
 
   const player = new Image()
   player.onload = () => {
-    const size = sizes.player
-    canvas.width = size.x
-    canvas.height = size.y
-    const frameCount = player.width / size.x
     Object.values(frames.player).forEach((action, y) => {
-      for (let x = 0; x < frameCount; x++) {
-        pen.clearRect(0, 0, canvas.width, canvas.height)
-        pen.drawImage(player, -x * size.x, -y * size.y)
-        const imageData = pen.getImageData(0, 0, canvas.width, canvas.height)
-        if (x == 0 || hasData(imageData)) {
-          const image = new Image()
-          image.src = canvas.toDataURL()
-          action.push(image)
-        }
-      }
+      getFrames(pen, player, sizes.player, action, y)
     })
   }
   player.src = "/pixel/sprites/player"
+
+  const levels = new Image()
+  levels.onload = () => {
+    getFrames(pen, levels, sizes.levels, frames.levels)
+  }
+  levels.src = "/pixel/sprites/levels"
 }
 
 loadTemplates()
@@ -411,19 +414,28 @@ Vector.prototype.times = function(factor) {
   return new Vector(this.x * factor, this.y * factor)
 }
 
-function Level(plan) {
-  this.width = plan[0].length;
-  this.height = plan.length;
+function Level(image) {
+  this.width = image.width
+  this.height = image.height
   this.grid = [];
   this.border = new Wall(new Vector(-1, -1));
 
   this.gameObjects = [];
 
+  const levelCanvas = document.createElement('canvas')
+  levelCanvas.width = image.width
+  levelCanvas.height = image.height
+  const ctx = levelCanvas.getContext('2d')
+  ctx.drawImage(image, 0, 0)
+  const imageData = ctx.getImageData(0, 0, levelCanvas.width, levelCanvas.height)
+
   for (var y = 0; y < this.height; y++) {
-    var line = plan[y];
     for (var x = 0; x < this.width; x++) {
-      var def = definitions[line[x]];
+      const color = getColor(imageData, (y * image.width + x) * 4)
+      console.log(color)
+      var def = colors[color]
       if (def) {
+        console.log(def)
         var pos = new Vector(x, y);
         var obj = new def(pos);
         this.gameObjects.push(obj);
@@ -472,8 +484,7 @@ function finish(status) {
 
 let currentLevel = 0
 function runLevel() {
-  var parsed = levels[currentLevel].split('\n').filter(e => e);
-  level = new Level(parsed);
+  level = new Level(frames.levels[currentLevel]);
   cnv.width = level.width * scale;
   cnv.height = level.height * scale;
 
@@ -488,7 +499,7 @@ function runLevel() {
     }
 
     if (level.status == "lost") runLevel();
-    else if (currentLevel < levels.length - 1) {
+    else if (currentLevel < frames.levels.length - 1) {
       currentLevel++
       runLevel()
     } else {
