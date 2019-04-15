@@ -105,7 +105,13 @@ app.get('/pixel/list', (req, res) => {
     return
   }
 
-  const list = fs.readdirSync(dir).filter(name => /\.png$/.test(name)).map(name => name.replace(/\.png$/, ''))
+  const list = fs.readdirSync(dir).filter(name => /\.png$/.test(name))
+    .map(name => ({
+      name,
+      time: fs.statSync(path.join(dir, name)).mtime.getTime()
+    }))
+    .sort((a,b) => b.time - a.time)
+    .map(o => { console.log(o); return o.name.replace(/\.png$/, '')})
   res.json(list)
 })
 

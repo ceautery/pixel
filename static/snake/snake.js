@@ -86,7 +86,8 @@ function gameOver() {
 }
 
 function keyHandler(e) {
-    player.directionQueue.push(e.key)
+  player.directionQueue.push(e.key)
+  e.preventDefault()
 }
 
 function getRotation(obj) {
