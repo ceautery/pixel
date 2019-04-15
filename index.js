@@ -43,6 +43,13 @@ const games = [
       { name: 'lava', w: 15, h: 15 },
       { name: 'levels', w: 29, h: 13 }
     ]
+  },{
+    name: 'snake',
+    templates: [
+      { name: 'head', w: 22, h: 22 },
+      { name: 'tail', w: 22, h: 22 },
+      { name: 'fruit', w: 22, h: 22 }
+    ]
   }
 ]
 const gameNames = games.map(g => g.name)
