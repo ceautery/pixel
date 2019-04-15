@@ -90,3 +90,18 @@ canvas { border: solid; margin-right: 1em; }
 input[type=color] {
   display: none;
 }
+
+.picker {
+  width: 50px;
+  height: 50px;
+  background: grey;
+  margin-right: 1em;
+  display: inline-block;
+  border: 1px solid grey;
+}
+
+.picker + span {
+  font-size: 2em;
+  position: absolute;
+  margin-top: .25em;
+}

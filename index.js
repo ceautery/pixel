@@ -38,10 +38,10 @@ const games = [
   },{
     name: 'dark_blue',
     templates: [
-      { name: 'player', w: 15, h: 15, actions: ['move', 'jump', 'stand'] },
+      { name: 'player', w: 15, h: 15, actions: ['move', 'jump', 'stand', 'dying'] },
       { name: 'coin', w: 15, h: 15 },
       { name: 'lava', w: 15, h: 15 },
-      { name: 'lava2', w: 15, h: 15 }
+      { name: 'levels', w: 29, h: 13 }
     ]
   }
 ]

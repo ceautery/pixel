@@ -130,7 +130,7 @@ function getColor(e) {
   const y = e.offsetY
   const id = ctx.getImageData(x, y, 1, 1)
   const color = '#' + Array.from(id.data).map(n => ('00' + n.toString(16)).slice(-2)).join('')
-  setColor(color)
+  setColor(/00$/.test(color) ? "#ffffffff" : color)
   setMode('draw')
 }
 
@@ -185,6 +185,14 @@ async function changeGame(g, t) {
   play.href = game.name
 }
 
+function showPalette() {
+  levelPalette.style.display = 'block'
+}
+
+function hidePalette() {
+  levelPalette.style.display = 'none'
+}
+
 async function changeTemplate(t) {
   stopDrawing = true
   changer.style.display = 'none'
@@ -192,6 +200,9 @@ async function changeTemplate(t) {
   if (template == t) return
   template = t
   if (!template.actions) template.actions = ['default']
+
+  if (template.name == 'levels') showPalette();
+  else hidePalette();
 
   templateContainer.innerText = template.name
   await fetch('set_template', {
@@ -634,6 +645,12 @@ function getRGB(h, s, v) {
     case 4: return [mid, min, max];
   }
 }
+
+document.querySelectorAll('.picker').forEach(picker => {
+  const color = picker.getAttribute('color')
+  picker.style.background = color
+  picker.onclick = () => setColor(color)
+})
 
 // const example=`
 //   init 64 64

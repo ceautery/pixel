@@ -80,7 +80,6 @@ const frames = {
   lava: [],
   coin: [],
   player: { move: [], jump: [], stand: [] },
-  lava2: []
 }
 
 const sizes = {
@@ -122,22 +121,6 @@ function loadTemplates() {
       image.src = canvas.toDataURL()
       frames.lava.push(image)
     }
-    frames.lava2 = frames.lava.slice()
-    const lava2 = new Image()
-    lava2.onload = () => {
-      const size = sizes.lava
-      canvas.width = size.x
-      canvas.height = size.y
-      const frameCount = lava.width / size.x
-      for (let i = 0; i < frameCount; i++) {
-        pen.clearRect(0, 0, canvas.width, canvas.height)
-        pen.drawImage(lava2, -i * size.x, 0)
-        const image = new Image()
-        image.src = canvas.toDataURL()
-        frames.lava2.push(image)
-      }
-    }
-    lava2.src = "/pixel/sprites/lava2"
   }
   lava.src = "/pixel/sprites/lava"
 
@@ -289,10 +272,10 @@ function LavaHorizontal(pos) {
 LavaHorizontal.prototype = new Lava;
 
 LavaHorizontal.prototype.draw = function(pen) {
-  if (frames.lava2.length) {
+  if (frames.lava.length) {
     pen.save()
     pen.scale(1/15, 1/15)
-    pen.drawImage(frames.lava2[this.frameNum], 0, 0)
+    pen.drawImage(frames.lava[this.frameNum], 0, 0)
     pen.restore()
   } else {
     pen.fillStyle = 'rgb(255, 100, 100)';
@@ -329,16 +312,18 @@ Player.prototype.draw = function(pen) {
   if (frames.player.move.length) {
 
     const oldAction = this.action
-    if (pressed.up) {
-      this.action = 'jump'
-    } else if (pressed.left) {
-      this.action = 'move'
-      this.reversed = true
-    } else if (pressed.right) {
-      this.action = 'move'
-      this.reversed = false
-    } else {
-      this.action = 'stand'
+    if (this.action != 'dying') {
+      if (pressed.up) {
+        this.action = 'jump'
+      } else if (pressed.left) {
+        this.action = 'move'
+        this.reversed = true
+      } else if (pressed.right) {
+        this.action = 'move'
+        this.reversed = false
+      } else {
+        this.action = 'stand'
+      }
     }
     if (this.action != oldAction) this.frameNum = 0
 
@@ -368,8 +353,9 @@ Player.prototype.act = function() {
   collisions.filter(o => o.affectsPlayer).forEach(a => playerTouched(a.name, a));
 
   if (level.status == "lost") {
-    this.pos.y += step;
-    this.size.y -= step
+    // this.pos.y += step;
+    // this.size.y -= step
+    this.action = 'dying'
   }
 
   function moveX(player) {
