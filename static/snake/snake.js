@@ -82,7 +82,7 @@ function getRandom(max) {
 }
 
 function gameOver() {
-    clearInterval(interval);
+    if(interval) clearInterval(interval);
 }
 
 function keyHandler(e) {
@@ -124,7 +124,13 @@ function drawScore() {
     score.innerText = "Score: " + game.score;
 }
 
+let email
+function setEmail() {
+  select.blur()
+}
+
 function gameStart() {
+  gameOver()
     interval = setInterval(draw, 100);
     tail = [];
     snakeLength = 3;
@@ -138,17 +144,20 @@ function gameStart() {
         directionQueue: []
     }
     drawScore();
+  const email = select.options[select.selectedIndex].value
+  const src = `/pixel/sprites/${email}/snake`
+
   const playerImage = new Image()
   playerImage.onload = () => player.image = firstFrame(playerImage)
-  playerImage.src = "/pixel/sprites/head/head"
+  playerImage.src = `${src}/head/head`
 
   const fruitImage = new Image()
   fruitImage.onload = () => fruit.image = firstFrame(fruitImage)
-  fruitImage.src = "/pixel/sprites/fruit/fruit"
+  fruitImage.src = `${src}/fruit/fruit`
 
   const tailImageLoader = new Image()
   tailImageLoader.onload = () => tailImage = firstFrame(tailImageLoader)
-  tailImageLoader.src = "/pixel/sprites/tail/tail"
+  tailImageLoader.src = `${src}/tail/tail`
 }
 
 function firstFrame(image) {
