@@ -59,7 +59,7 @@ function getFrames(pen, image, size, frameSet, offset = 0) {
 
 function loadTemplates() {
   select.blur()
-  if (level) level.finished = true
+  editing = true
   const email = select.options[select.selectedIndex].value
   const src = `/pixel/sprites/${email}/dark_blue`
   const canvas = document.createElement('canvas')
@@ -453,6 +453,7 @@ function runLevel() {
 let currentLevel
 function init() {
   currentLevel = 0
+  editing = false
   runLevel()
 }
 
