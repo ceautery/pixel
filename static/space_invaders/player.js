@@ -2,6 +2,7 @@ const frames = []
 const size = {x: 11, y: 11}
 
 function loadTemplate(url, arr) {
+  arr.length = 0
   const canvas = document.createElement('canvas')
   const pen = canvas.getContext('2d')
   const img = new Image()
