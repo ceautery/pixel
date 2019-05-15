@@ -6,15 +6,10 @@ const [W, H] = [224, 256] // Game resolution
 const size = {x: 11, y: 11}
 const actions = ['move']
 
-const Template = [
-  {name: 'enemy1', size, actions},
-  {name: 'enemy2', size, actions},
-  {name: 'enemy3', size, actions}
-]
-
 const frames = [[], [], []]
 
 function loadTemplate(url, arr) {
+  arr.length = 0
   const canvas = document.createElement('canvas')
   const pen = canvas.getContext('2d')
   const img = new Image()
@@ -33,9 +28,11 @@ function loadTemplate(url, arr) {
   img.src = url
 }
 
-loadTemplate("/pixel/sprites/enemy/enemy", frames[0])
-loadTemplate("/pixel/sprites/enemy2/enemy2", frames[1])
-loadTemplate("/pixel/sprites/enemy3/enemy3", frames[2])
+function loadImages(email) {
+  loadTemplate(`/pixel/sprites/${email}/space_invaders/enemy/enemy`, frames[0])
+  loadTemplate(`/pixel/sprites/${email}/space_invaders/enemy2/enemy2`, frames[1])
+  loadTemplate(`/pixel/sprites/${email}/space_invaders/enemy3/enemy3`, frames[2])
+}
 
 class Enemy {
   constructor(options) {
@@ -77,4 +74,4 @@ class Enemy {
   }
 }
 
-export {Enemy, Template}
+export { Enemy, loadImages }

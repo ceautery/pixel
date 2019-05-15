@@ -20,7 +20,10 @@ function loadTemplate(url, arr) {
   img.src = url
 }
 
-loadTemplate("/pixel/sprites/player/player", frames)
+function loadImages(email) {
+  loadTemplate(`/pixel/sprites/${email}/space_invaders/player/player`, frames)
+}
+
 class Player {
   constructor() {
     this.x = 11
@@ -38,4 +41,4 @@ class Player {
   }
 }
 
-export default Player
+export { Player, loadImages }

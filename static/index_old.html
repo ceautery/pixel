@@ -1,33 +1,80 @@
-<meta name="google-signin-client_id" content="495982056560-ckkrv6pmrp5de7hhh9kk5hs22do83enu.apps.googleusercontent.com">
-<link href="pixel.css" rel="stylesheet">
-<div id="error"></div>
-<main>
-  <section id="left">
-    <div id="frameCounter"></div>
-    <canvas id="canvas"></canvas><br />
+<!doctype html>
+<html>
+  <head>
+    <meta name="google-signin-client_id" content="495982056560-ckkrv6pmrp5de7hhh9kk5hs22do83enu.apps.googleusercontent.com">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+    <link rel="stylesheet" href="paint_language.css">
+  </head>
+  <body>
     <input type="color" onchange="setColor(this.value)">
-    <button onclick="newFrame()">New frame</button>
-    <p>Create sprites named "coin" and "lava", and then <a href="dark_blue">click here</a> to play Dark Blue</p>
-
-    <div style="display: flex;">
-    <select id="sprites" size="10" onchange="load()"></select>
-    <nav>
-      <button onclick="newSprite()">New sprite</button>
-      <button onclick="save()">Save</button>
-      <button onclick="rename()">Rename</button>
-    </nav>
+    <div id="changer">
+      <div id="gameList"></div>
+      <div id="templateList"></div>
+      <div id="spriteList"></div>
+      <div id="actionList"></div>
     </div>
-  </section>
 
-  <section id="frames">
-    <div>Frames</div>
-    <div id="frameContainer"></div>
-  </section>
-</main>
+    <div id="page">
+      <header>
+        <div>
+          <div>Game</div>
+          <div class="container" id="gameContainer" onclick="showGames()">Game</div>
+        </div>
+        <div>
+          <div>Character</div>
+          <div class="container" id="templateContainer" onclick="showTemplates()">Template</div>
+        </div>
+        <div>
+          <div>Sprite</div>
+          <div class="container" id="spriteContainer" onclick="showSprites()">Sprite</div>
+        </div>
+        <div>
+          <div>Action</div>
+          <div class="container" id="actionContainer" onclick="showActions()">Action</div>
+        </div>
+        <div><a id="play" href="space_invaders">Play game</a></div>
+      </header>
 
-<!-- <div class="g&#45;signin2" data&#45;onsuccess="onSignIn"></div> -->
-<input size="25" id="localName"></input>
-<button onclick="localSignIn()">Local sign in</button>
+      <div id="container">
+        <section id="drawArea">
+          <canvas id="canvas" width=750 height=750></canvas>
+          <div id="framePicker">Frame x of x</div>
+          <i class="fas fa-plus" onclick="newFrame()"></i>
+        </section>
+        <div id="toolbar">
+          <i class="fas fa-pen active" onclick="setMode('draw')"></i>
+          <i id="palette" class="fas fa-palette grey" onclick="openColorPicker()"></i>
+          <i class="fas fa-mouse-pointer grey"></i>
+          <i class="fas fa-copy" onclick="copySelection()"></i>
+          <i class="fas fa-cut grey"></i>
+          <i class="fas fa-paste" onclick="pasteSelection()"></i>
+          <i class="fas fa-undo grey"></i>
+          <i class="fas fa-layer-group grey"></i>
+          <i class="fas fa-eye-dropper" onclick="setMode('dropper')"></i>
+        </div>
+        <div id="timeTravelSelector">
+          <input id="stepNumber" type="range" min="0" step="1" oninput="travel(this.value)">
+          <label for="stepNumber">Step</label>
+        </div>
+        <div id="framesContainer"></div>
+        <div id="levelPalette">
+          <div class="picker" color="#797979"></div><span>Wall</span><br>
+          <div class="picker" color="#ff9300"></div><span>Coin</span><br>
+          <div class="picker" color="#0433ff"></div><span>Player</span><br>
+          <div class="picker" color="#ff2600"></div><span>Lava</span><br>
+          <div class="picker" color="#663399"></div><span>Horizontal bouncing lava</span><br>
+          <div class="picker" color="#ff8ad8"></div><span>Vertical bouncing lava</span><br>
+          <div class="picker" color="#941100"></div><span>Dripping lava</span><br>
+          <div class="picker" color="#fff"></div><span>Empty</span><br>
+        </div>
+      </div>
+    </div>
 
-<script src="https://apis.google.com/js/platform.js" async defer></script>
-<script src="pixel.js"></script>
+    <div class="g-signin2" data-onsuccess="onSignIn"></div>
+    <!-- <input size="25" id="localName"></input> -->
+    <!-- <button onclick="localSignIn()">Local sign in</button> -->
+
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <script src="paint_language.js"></script>
+  </body>
+</html>

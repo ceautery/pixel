@@ -1,5 +1,5 @@
-import Player from './player.js'
-import {Enemy} from './enemy.js'
+import { Player, loadImages as loadPlayerImages } from './player.js'
+import { Enemy, loadImages as loadEnemyImages } from './enemy.js'
 
 const [W, H] = [224, 256] // Game resolution
 const playerSpeed = 3
@@ -24,6 +24,11 @@ class Game {
     this.fitToScreen = this.fitToScreen.bind(this)
     this.step = this.step.bind(this)
     this.draw = this.draw.bind(this)
+  }
+
+  loadImages(email) {
+    loadEnemyImages(email)
+    loadPlayerImages(email)
   }
 
   fitToScreen() {

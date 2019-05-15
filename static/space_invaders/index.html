@@ -7,10 +7,46 @@ canvas {
 }
 </style>
 
+Play as:
+<select id="select">
+  <option value="ceautery@gmail.com">Default</option>
+  <option value="baginski.1@gemsschool.org">Mrs. Baginski</option>
+  <option value="vasquez.2@gemsschool.org">Abraham</option>
+  <option value="morris.3@gemsschool.org">David</option>
+  <option value="kay.2@gemsschool.org">Gulian</option>
+  <option value="adams.2@gemsschool.org">Isaiah</option>
+  <option value="dupuy.3@gemsschool.org">Julian</option>
+  <option value="herriott-mcgowan.1@gemsschool.org">Kendall</option>
+  <option value="morris.5@gemsschool.org">Lilla</option>
+  <option value="gage-redmond.1@gemsschool.org">Lincoln</option>
+  <option value="matin.1@gemsschool.org">Mehraneh</option>
+  <option value="white.19@gemsschool.org">Ricky</option>
+  <option value="addington.1@gemsschool.org">Tucker</option>
+  <option value="pinckney.1@gemsschool.org">Xavier</option>
+  <option value="frierson.1@gemsschool.org">frierson.1</option>
+  <option value="henderson.1@gemsschool.org">henderson.1</option>
+  <option value="jackson.9@gemsschool.org">jackson.9</option>
+  <option value="johns-carroll.1@gemsschool.org">johns-carroll.1</option>
+  <option value="mankins.2@gemsschool.org">mankins.2</option>
+  <option value="mcbride.2@gemsschool.org">mcbride.2</option>
+  <option value="motley.1@gemsschool.org">motley.1</option>
+  <option value="pannell.1@gemsschool.org">pannell.1</option>
+  <option value="phimmasay.1@gemsschool.org">phimmasay.1</option>
+  <option value="stuebs.1@gemsschool.org">stuebs.1</option>
+  <option value="tobin.1@gemsschool.org">tobin.1</option>
+</select>
 <canvas id="canvas"></canvas>
 
 <script type="module">
   import Game from './game.js'
   const game = new Game(canvas)
   game.init()
+
+  function loadImages() {
+    game.loadImages(select.options[select.selectedIndex].value)
+    select.blur()
+  }
+
+  select.addEventListener('change', loadImages)
+  loadImages()
 </script>
