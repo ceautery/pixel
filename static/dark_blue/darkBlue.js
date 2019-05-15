@@ -65,6 +65,10 @@ function loadTemplates() {
   const canvas = document.createElement('canvas')
   const pen = canvas.getContext('2d')
 
+  frames.coin.length = 0
+  frames.lava.length = 0
+  frames.player.move.length = 0
+
   const coin = new Image()
   coin.onload = () => getFrames(pen, coin, sizes.coin, frames.coin)
   coin.src = `${src}/coin/coin`
