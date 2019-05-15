@@ -12,76 +12,10 @@ const colors = {
 
 function getColor(id, offset) {
   const arr = Array.from(id.data).slice(offset, offset + 3)
-  console.log(arr)
   return '#' + arr.map(c => ('00' + c.toString(16)).slice(-2)).join('')
 }
 
-var definitions = {
-  x: Wall,
-  o: Coin,
-  '@': Player,
-  '!': Lava,
-  '=': LavaHorizontal,
-  '|': LavaVertical,
-  'v': LavaRepeating
-},
-
-levels = [`
-                      
-                      
-  x              = x  
-  x         o o    x  
-  x @      xxxxx   x  
- xxxxxx            x  
-      x!!!!!!!!!!!!x  
-      xxxxxxxxxxxxxx  
-                      
-`,`
-       x!!!x                 
-       xx!xx                 
-        xvx              o o 
-                             
-                        xxxxx
-                             
-                             
- @     xxxxx                 
-xxxxxxxx   xxxx     xxxxxxxxx
-              x     x        
-              x!!!!!x        
-              x!!!!!x        
-              xxxxxxx        
-`,`
-                   v 
-x=                  x
-x|                  x
-x     o o o o o o o x
-x      o o o o o o  x
-x     o o o o o o o x
-x                   x
-x @                 x
-xxxxxxxxxxxxxxxxxxxxx
-`,`
-                   v 
-x=                  x
-x|                  x
-x       o o o o   o x
-x      o o   o o o  x
-x       o o o o o o x
-x                   x
-x   @  @  @   @     x
-xxxxxxxxxxxxxxxxxxxxx
-`,`
-         v   v     v 
-x=  v   v   v     v x
-x|                  x
-x             o   o x
-x      o o   o   o  x
-x           o o o o x
-x                   x
-x             @     x
-xxxxxxxxxxxxxxxxxxxxx
-`],
-step = 5/300,
+var step = 5/300,
 scale = 50,
 ctx,
 wobbleSpeed = 8, wobbleDist = 0.07,
@@ -107,6 +41,7 @@ const sizes = {
 }
 
 function getFrames(pen, image, size, frameSet, offset = 0) {
+  frameSet.length = 0
   pen.canvas.width = size.x
   pen.canvas.height = size.y
   const frameCount = image.width / size.x
@@ -123,16 +58,20 @@ function getFrames(pen, image, size, frameSet, offset = 0) {
 }
 
 function loadTemplates() {
+  select.blur()
+  if (level) level.finished = true
+  const email = select.options[select.selectedIndex].value
+  const src = `/pixel/sprites/${email}/dark_blue`
   const canvas = document.createElement('canvas')
   const pen = canvas.getContext('2d')
 
   const coin = new Image()
   coin.onload = () => getFrames(pen, coin, sizes.coin, frames.coin)
-  coin.src = "/pixel/sprites/coin"
+  coin.src = `${src}/coin/coin`
 
   const lava = new Image()
   lava.onload = () => getFrames(pen, lava, sizes.lava, frames.lava)
-  lava.src = "/pixel/sprites/lava"
+  lava.src = `${src}/lava/lava`
 
   const player = new Image()
   player.onload = () => {
@@ -140,16 +79,16 @@ function loadTemplates() {
       getFrames(pen, player, sizes.player, action, y)
     })
   }
-  player.src = "/pixel/sprites/player"
+  player.src = `${src}/player/player`
 
   const levels = new Image()
   levels.onload = () => {
     getFrames(pen, levels, sizes.levels, frames.levels)
+    if(!ctx) ctx = cnv.getContext('2d');
+    setTimeout(init, 500)
   }
-  levels.src = "/pixel/sprites/levels"
+  levels.src = `${src}/levels/levels`
 }
-
-loadTemplates()
 
 function hasData(imageData) {
   const view = new Uint32Array(imageData.data.buffer)
@@ -432,10 +371,8 @@ function Level(image) {
   for (var y = 0; y < this.height; y++) {
     for (var x = 0; x < this.width; x++) {
       const color = getColor(imageData, (y * image.width + x) * 4)
-      console.log(color)
       var def = colors[color]
       if (def) {
-        console.log(def)
         var pos = new Vector(x, y);
         var obj = new def(pos);
         this.gameObjects.push(obj);
@@ -482,7 +419,6 @@ function finish(status) {
   setTimeout( _ => level.finished = true, 1000)
 }
 
-let currentLevel = 0
 function runLevel() {
   level = new Level(frames.levels[currentLevel]);
   cnv.width = level.width * scale;
@@ -514,8 +450,9 @@ function runLevel() {
   frame()
 }
 
+let currentLevel
 function init() {
-  ctx = cnv.getContext('2d');
+  currentLevel = 0
   runLevel()
 }
 
